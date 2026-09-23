@@ -1,0 +1,228 @@
+# PLAN — `irrational_zeta_five`의 `sorry`를 없애기 위한 로드맵
+
+기준 문서: `ZETA5_IS_IRRATIONAL.pdf` (A. Fauzan, 2026-09-17). 절/식 번호는 이 논문을 따른다.
+현재 상태(2026-09-23): §1.1 환원은 증명 완료. 남은 `sorry`는 `Zeta5.exists_smallIntPolys_zeta5`
+하나이며, 이는 논문 Theorem 2.1의 귀결이다.
+
+## 0. 원칙
+
+1. **논문이 옳다는 보장이 없다.** 이 논문은 미해결 난제에 대한 미심사 단독 프리프린트다. 따라서
+   Lean 작업보다 먼저 수치 검증(Phase 0)으로 가장 취약한 명제를 확인하고, 거기서 깨지면 중단한다.
+2. **항상 빌드가 통과하는 상태를 유지한다.** 각 Phase는 정의 + `sorry`가 붙은 명제로 시작해서
+   `sorry`를 하나씩 지운다. `sorry` 개수는 이 문서 §9의 인벤토리로 추적한다.
+3. **공리 검사.** CI에서 `#print axioms irrational_zeta_five`를 찍어 `sorryAx`, `Lean.ofReduceBool`
+   (`native_decide`)이 없어야 완료로 본다. 유리수 구간 계산은 `norm_num`/`decide`로 하고,
+   `native_decide`는 합의 없이 쓰지 않는다.
+4. **논문 순서가 아니라 의존성 순서로 진행한다.** 정의(Phase 1) → 차수·양성(Phase 2, 3) →
+   실수 감쇠(Phase 4) → p-진 정수성(Phase 5) → 소수 합(Phase 6) → 결합(Phase 7).
+   Phase 4와 5는 독립이므로 병렬 가능하다.
+5. **Mathlib 우선.** 현재 핀은 Mathlib v4.34.0. 소수정리(§6)를 외부에서 가져와야 할 때만 핀을
+   올린다. TauCeti는 관련 모듈이 없어 현재로선 추가하지 않는다(§8 참조).
+
+## 1. 최상위 분해
+
+`exists_smallIntPolys_zeta5`는 다음 네 명제의 귀결로 재작성한다 (모두 `K = 40n`, `M = 200`).
+
+| 이름 | 내용 | 논문 | Phase |
+|---|---|---|---|
+| `QKM_mem_int` | `Q_{K,M} ∈ ℤ[X]` (모든 계수의 분모가 1) | Prop 5.1 | 5 |
+| `QKM_natDegree` | `deg Q_{K,M} = h = 37n` | (2.9) | 2 |
+| `QKM_pos` | `Q_{K,M}(ζ(5)) > 0` | Prop 2.2 | 3 |
+| `QKM_decay` | 충분히 큰 `n`에 대해 `Q_{40n,200}(ζ(5)) < exp(-139n²/5)` | (7.1), (7.2) | 4, 6, 7 |
+
+`QKM_decay`는 다시 `log F_K(ζ(5)) ≤ U K² + 24 K log K + 200 K` (Prop 6.3, Phase 4)와
+`log m_{K,M} ≤ (A_M + ε) K²` eventually (5.21, Phase 6)로 나뉜다.
+
+## 2. Phase 0 — 수치 검증 (Lean 이전, 1~2일)
+
+목적: 논문의 가장 압축된 논증(4장)이 실제로 성립하는지 컴퓨터로 확인한다. 실패하면 논문의 결함이고,
+프로젝트를 중단한다.
+
+- [ ] `scripts/check_local.py` (또는 Sage/PARI): 작은 `K ∈ {40, 80, 120}`에 대해 `G_K(X)`를 정확한
+      유리수 다항식 행렬로 만들고 `Δ_K(X)`를 계산한다. 각 소수 `p ≤ 2h`에 대해 계수들의
+      `v_p`의 최소값(Gauss 평가)이 (5.1)의 `L_p(K,M)`, 즉 Prop 4.1의 `γ_p^in`, Prop 4.3의 `γ_p^out`,
+      (3.12)의 하한 이상인지 확인한다. 단, 논문의 가정 `K ≥ 200M²`은 이 범위에서 만족되지 않으므로
+      `M`을 작게 잡거나 가정을 무시하고 부등식만 본다. 부등식 자체가 작은 `K`에서 깨지면 논문 결함의
+      강한 증거다.
+- [ ] `Q_{K,M}(ζ(5))`를 고정밀도로 계산해 `K²` 스케일의 감쇠 상수가 `A_M + U`에 수렴하는 경향을 본다.
+- [ ] 부록 A 표 2의 모든 구간(약 500개)에 대해 (A.9) `B(l,r) < -1329/200`을 구간 산술로 재현한다.
+- [ ] 부록 B의 유리수 상수는 이미 재현 완료(2026-09-23, Python `fractions`). 스크립트를 저장한다.
+- [ ] Prop C.1은 Theorem 1.1에 불필요하므로 검증 대상에서 제외한다.
+
+중단 기준: 위 첫 항목에서 어떤 `p`에 대해 `v_p^G(Δ_K) < γ_p`가 관측되면 논문의 증명은 그대로는
+성립하지 않는다. 사용자에게 보고하고 진행 여부를 묻는다.
+
+## 3. Phase 1 — 정의 (`Zeta5/Defs.lean`)
+
+논문 §2.1, §2.2, §5의 대상을 Lean 정의로 옮긴다. 증명은 없고 정의만 두므로 빠르지만, 여기서 틀리면
+전부 무효이므로 Phase 0의 스크립트와 작은 `K`에서 값을 대조한다(`#eval`은 불가하므로 `norm_num`
+또는 `decide`로 `K = 40` 한 경우를 검사하는 테스트 파일을 둔다).
+
+- [ ] 상수: `K = 40n`, `N = 3n`, `h = 37n`, `α, λ, H` (2.1).
+- [ ] `D m : ℚ[X] := ∏ (X + j²)`, `H5 j := ∑ v⁻⁵`.
+- [ ] 범함수 `μ`: 다항식 부분은 (2.2) `(-1)^e B_{2e+2}(2e+3)(2e+4)(2e+5)/24` (Mathlib `bernoulli` 사용,
+      `B₁ = -1/2` 규약은 짝수 첨자만 쓰므로 무관). 극 부분은 (2.3), 값은 `ℚ[X]` (변수 `X`).
+- [ ] 일반 유리함수 대신 **필요한 항만** 정의한다: `R_{ij} = D_N⁶ t^{i+j} / D_K`에 대해
+      `P := (D_N⁶ t^{i+j}) /ₘ D_K` (Mathlib `Polynomial.divByMonic`), 잔차
+      `c_j := (D_N⁶ (-j²)^{i+j}) / D_K'(-j²)`, 그리고 `μ_X(R) := μ(P) + ∑_j c_j μ_X(1/(t+j²))`.
+      이는 Prop 2.2에서 적분 표현과 일치함을 별도로 증명해야 한다(Phase 3).
+- [ ] `G K : Matrix (Fin h) (Fin h) ℚ[X]`, `Δ K := det (G K)`, `S K` (2.5), `F K := S K • Δ K`.
+- [ ] `γ_in p`, `γ_out p` (4.8), (4.14): 논문의 조합적 정의를 그대로 옮긴다(`ℓ_A(a)`, `m_A`, `T, E`,
+      `ε_a`, `L_a`, `w_{a,i}`; `r_p`, `t_p`, `u`). 정수임을 증명하는 보조정리 포함.
+- [ ] `L p K M` (5.1), `m K M := ∏_{p ≤ 2h, p prime} p^{-L_p}` (5.2), `Q K M := m K M • F K`.
+- [ ] `exists_smallIntPolys_zeta5`를 §1의 네 명제로부터 유도하도록 `Main.lean`을 갱신한다.
+
+## 4. Phase 2 — 차수 (§2.3)
+
+- [ ] `[X] G_K = V · diag(...) · Vᵀ` (Vandermonde `V_{ij} = (-j²)^i`). Mathlib `Matrix.det_vandermonde` 사용.
+- [ ] `[X^h] Δ_K = (-1)^{h(h-1)/2} ∏ j⁴ D_N(-j²)⁵ ≠ 0` (2.9). 각 인자가 0이 아님은 `positivity`급.
+- [ ] 결론 `natDegree (Q K M) = h`. 규모: 작음(수백 줄).
+
+## 5. Phase 3 — ζ(5)에서의 양성 (§2.4, Prop 2.2)
+
+- [ ] 가중치 `w(y) := (2π)⁴ y⁵/12 ∑ ℓ⁴ e^{-2πℓy}`의 적분가능성.
+- [ ] 모멘트 공식 `∫ y^{2e} w = μ(t^e)`: `∫ y^{2e+5} e^{-2πℓy} = (2e+5)!/(2πℓ)^{2e+6}`
+      (Mathlib Gamma 적분 `Real.Gamma_eq_integral` 계열) + Euler 공식
+      `riemannZeta_two_mul_nat` (Mathlib에 있음) + 급수·적분 교환(`integral_tsum`).
+- [ ] 극 공식 `∫ w/(y²+a²) = a⁴ ζ(5,a) − 1/(2a) − 1/4`: 논문은 Hermite 적분공식(DLMF 25.11.29)을
+      쓰는데 **Mathlib에 없다.** 두 가지 경로 중 택일.
+      (a) Hermite 공식을 `a > 0`, `s = 5`에 대해서만 증명. 4번 부분적분 + `f(y) = 1/(e^{2πy}-1)` 전개.
+      (b) 직접: `1/(y²+a²)`를 쓰지 말고 `w(y)/(y²+a²)`를 `∑_ℓ ℓ⁴ ∫ y⁵ e^{-2πℓy}/(y²+a²)`로 두고
+      Laplace 변환 표현으로 `H⁽⁵⁾_j`가 나오는지 확인. (a)가 논문과 일치하므로 (a) 권장.
+      Hurwitz zeta 값은 `a = j`가 정수일 때만 필요하므로 `ζ(5,j) = ζ(5) − H⁽⁵⁾_{j-1}`만 있으면 되고,
+      이는 `hasSum_hurwitzZeta_of_one_lt_re`에서 나온다.
+- [ ] 선형성: Phase 1의 `μ_X(R_{ij})` 정의(몫 + 잔차)가 `∫ R_{ij}(y²) w`와 같음.
+- [ ] `G_K(ζ(5))`가 Gram 행렬이므로 양정치(`Matrix.PosDef`), 따라서 `det > 0`
+      (`Matrix.PosDef.det_pos`). `S_K > 0`, `m_{K,M} > 0`이므로 `Q_{K,M}(ζ(5)) > 0`.
+- 규모: 중간(1~2천 줄). 실해석 적분 조작이 대부분이다.
+
+## 6. Phase 4 — 실수 감쇠 (§6, 부록 A) → Prop 6.3
+
+Phase 5와 독립. 가장 "수학적으로 정직한" 부분이며 논문이 틀렸다면 여기서 틀릴 가능성은 낮다.
+
+- [ ] **Andréief 항등식** (6.10): Mathlib에 없음. `det (∫ φ_i ψ_j) = (1/h!) ∫ det[φ_i(y_j)] det[ψ_i(y_j)]`.
+      Leibniz 전개 + Fubini로 직접 증명. 일반형으로 별도 파일 `Zeta5/Andreief.lean`.
+- [ ] Lemma 6.2 (질량 0 측도의 로그 에너지 ≤ 0): Gaussian 커널 `e^{-s|z-w|²}`의 양정치성 +
+      `log r = ½∫₀^∞ (e^{-s} − e^{-sr²})/s ds`. 측도론 작업. `Zeta5/LogEnergy.lean`.
+- [ ] arcsine 측도의 퍼텐셜 (A.1)과 자기 에너지 `log((b−a)/4)`: Mathlib에 없음. 치환적분으로 증명.
+- [ ] 원 위 정규화 호길이 측도의 퍼텐셜 `log max(|t−u|, ε)`.
+- [ ] (6.6), (6.7)~(6.9): 정규화 및 필드 수정. 부등식 조작.
+- [ ] **Lemma 6.1 (A.9)**: 표 1의 16개 구간, 표 2의 약 500개 부분구간마다 `B(l,r) < −1329/200`을
+      (A.3), (A.4)의 유리수 상·하계로 검증. 이 부분은 사실상 검증된 수치계산이다.
+      계획: `log`, `arctan`, `sqrt`의 유리수 상·하계 보조정리를 한 번 만들고(Mathlib
+      `Real.log_le_sub_one_of_pos`, `Real.abs_log_sub_add_sum_range_le`, `Real.arctan` 급수 등 확인 필요),
+      각 구간은 `norm_num`으로 닫는다. 500개 × 고정밀 유리수는 `norm_num`이 느릴 수 있으므로
+      정밀도를 2^-144에서 필요한 최소로 줄이는 실험을 Phase 0에서 해 둔다. 여기가 이 Phase의
+      시간 대부분이다.
+- [ ] (A.10) `I(ρ)`, `C*`의 유리수 구간 → (6.4).
+- [ ] 스케일링 (6.12), 가중치 상계 (6.11), 계승 부등식 (Mathlib `Stirling` 파일 참고), (6.14), (6.15).
+- [ ] Prop 6.3.
+- 규모: 큼(3~5천 줄 + 수치 검증 파일).
+
+## 7. Phase 5 — p-진 정수성 (§3–§4) → Prop 5.1
+
+가장 위험한 Phase. Phase 0에서 검증한 뒤에만 착수한다.
+
+- [ ] §3 범함수 `τ`, 당김 (3.1), 반사·차분 항등식 (3.2), (3.3). Bernoulli 다항식의 `B_n(1−x)`,
+      `B_n(x+1) − B_n(x)` 항등식은 Mathlib `Polynomial.bernoulli`에 일부 있음(확인 필요).
+- [ ] **Bernoulli 곱셈 정리** (DLMF 24.4.18, Lemma 3.2에 필요): Mathlib에 없음. 생성함수로 증명.
+- [ ] von Staudt–Clausen: Mathlib `Bernoulli.vonStaudt_clausen` 있음 → `v_p(κ_d) ≥ −1`.
+- [ ] Tate 대수 `ℚ_p⟨z⟩`: Mathlib에 없음. 논문은 수렴 급수의 연속 확장을 쓰지만, 실제로 필요한 것은
+      **유한 절단**에서의 평가 하한이므로 `PowerSeries ℚ_p`의 계수 하한 조건으로 대체하는 것을
+      권장한다. Lemma 3.1을 이 형태로 다시 서술한다.
+- [ ] (3.5) 원거리 극의 전개, Lemma 3.2 분배 공식.
+- [ ] Lemma 3.3 (작은 소수): 정수값 다항식의 이항 기저(Mathlib `Polynomial.binomial`? 없으면 직접),
+      (3.8), (3.9), (3.10). 기저 변환 (3.11)과 (3.12).
+- [ ] **Prop 4.1 (내부 범위)**: CRT로 만든 `ℤ_p`-유니모듈러 기저 (4.5), 가중치 (4.6)~(4.8),
+      "각 성분의 평가 ≥ 두 행 가중치의 합"에서 `det`의 Gauss 평가 하한. 논문의 서술이 가장
+      압축된 곳이며 Phase 0의 검증 대상이다. `Polynomial.gaussNorm`(Mathlib에 있음)을 평가로 쓴다.
+- [ ] Lemma 4.2: 여인자 전개(complementary minors). Mathlib에는 일반 Laplace 전개가 없어
+      `Matrix.det_add`류를 직접 증명해야 한다. `Zeta5/DetRank.lean`.
+- [ ] Prop 4.3 (외부 범위) 및 `p > K`.
+- [ ] Legendre 공식 (5.3): Mathlib `padicValNat_factorial` 계열 사용.
+- [ ] Prop 5.1: 모든 `p`에 대해 `v_p(m_{K,M} F_K) ≥ 0` → 계수가 정수.
+- 규모: 매우 큼(5천~1만 줄).
+
+## 8. Phase 6 — 소수 합 (§5.1–5.3, 부록 B) → (5.21)
+
+- [ ] **소수정리 점근형**: Mathlib에는 Chebyshev 함수 `θ, ψ`와 유계만 있고 `θ(x) ~ x`는 없다.
+      0.2% 마진 때문에 Chebyshev 상수로는 대체 불가. 선택지:
+      (a) `PrimeNumberTheoremAnd` 프로젝트를 의존성으로 추가(Mathlib 핀 상향 필요).
+      (b) 필요한 형태 `∑_{K/M<p≤K/3} p f(K/p) log p / K² → ∫ f(x)/x³ dx`만 부분합으로 유도하되
+      `θ(x) = x + o(x)`는 외부에서 가져온다. (a)+(b) 조합이 현실적이다. 이 결정은 사용자 확인 필요.
+- [ ] (5.7): `γ_p^in = p Γ(K/p) + O_M(1)`. 논문은 스케치만 있고 `O_M(1)` 균일성이 핵심이다.
+      명시적 상수로 다시 써야 한다(Phase 0에서 수치로 상수 추정).
+- [ ] 외부 범위 (5.8)~(5.10), `I_out = 127751/96000`: 부록 B 표 4의 조각별 적분(`norm_num`).
+- [ ] 내부 적분 (5.18): 143개 구간에서 `R`이 1차식임을 보이고 적분(`norm_num`).
+- [ ] 꼬리 (5.15)~(5.17): 부분적분과 주기함수 `P, C`의 유계.
+- [ ] Prop 5.2, (5.21) `limsup K⁻² log m_{K,M} ≤ A_M`.
+- 규모: 큼. 소수정리 의존성이 결정되기 전까지는 (5.7) 이하 부등식 부분만 진행한다.
+
+## 9. Phase 7 — 결합 (§7)
+
+- [ ] (7.1): Prop 6.3 + (5.21) → `limsup K⁻² log Q_{K,M}(ζ(5)) ≤ A_M + U`.
+- [ ] (7.2) `−1600(A_200 + U) > 139/5`: 유리수 산술, `norm_num`. 2026-09-23에 Python으로 재현 완료.
+- [ ] `limsup` 형태를 `∀ᶠ n, Q_{40n,200}(ζ(5)) < exp(−139n²/5)`로 변환.
+- [ ] `exists_smallIntPolys_zeta5`의 `sorry` 제거 → `#print axioms irrational_zeta_five` 확인.
+
+## 10. 파일 구성(안)
+
+```
+Zeta5/Main.lean        -- 최종 정리와 §1.1 환원 (완료)
+Zeta5/Defs.lean        -- Phase 1
+Zeta5/Degree.lean      -- Phase 2
+Zeta5/Moment.lean      -- Phase 3: w, 모멘트, Hermite 공식, 양정치
+Zeta5/Andreief.lean    -- Phase 4
+Zeta5/LogEnergy.lean   -- Phase 4: Lemma 6.2, arcsine 퍼텐셜
+Zeta5/Potential.lean   -- Phase 4: 부록 A 표 1, 표 2 검증
+Zeta5/RealBound.lean   -- Phase 4: Prop 6.3
+Zeta5/Bernoulli.lean   -- Phase 5: τ, 곱셈 정리, 반사·차분
+Zeta5/Local.lean       -- Phase 5: Lemma 3.1~3.3
+Zeta5/DetRank.lean     -- Phase 5: Lemma 4.2
+Zeta5/Inner.lean       -- Phase 5: Prop 4.1
+Zeta5/Outer.lean       -- Phase 5: Prop 4.3
+Zeta5/Integrality.lean -- Phase 5: Prop 5.1
+Zeta5/PrimeSum.lean    -- Phase 6
+Zeta5/Constants.lean   -- Phase 6, 7: 부록 B 유리수 상수
+scripts/               -- Phase 0 수치 검증
+```
+
+## 11. 외부 라이브러리
+
+- **TauCeti** (https://github.com/TauCetiProject/TauCeti): 로그 퍼텐셜, Hankel 행렬식, 소수정리,
+  Bernoulli 곱셈 정리 중 어느 것도 없음(2026-09-23 확인). Mathlib `master`를 고정하므로 추가하면
+  이 프로젝트의 핀도 올려야 한다. 현재는 추가하지 않는다. Phase 6에서 핀을 올리게 되면 재검토.
+- **PrimeNumberTheoremAnd**: 소수정리 점근형의 유일한 현실적 출처. Phase 6 착수 시 결정.
+
+## 12. `sorry` 인벤토리 (진행 상황 추적)
+
+| Lean 이름 | Phase | 상태 |
+|---|---|---|
+| `Zeta5.irrational_of_smallIntPolys` | — | 완료 |
+| `Zeta5.exists_smallIntPolys_zeta5` | 7 | `sorry` (네 명제로 분해 예정) |
+| `QKM_natDegree` | 2 | 미착수 |
+| `QKM_pos` | 3 | 미착수 |
+| `hermite_integral_five` | 3 | 미착수 |
+| `andreief` | 4 | 미착수 |
+| `logEnergy_nonpos_of_zero_mass` | 4 | 미착수 |
+| `potential_bound_A9` | 4 | 미착수 |
+| `realBound_prop63` | 4 | 미착수 |
+| `bernoulli_multiplication` | 5 | 미착수 |
+| `local_small_primes_33` | 5 | 미착수 |
+| `inner_range_41` | 5 | 미착수 (Phase 0 검증 선행) |
+| `det_rank_42` | 5 | 미착수 |
+| `outer_range_43` | 5 | 미착수 |
+| `QKM_mem_int` | 5 | 미착수 |
+| `prime_sum_52` | 6 | 미착수 (소수정리 의존성 결정 선행) |
+| `normalization_growth_521` | 6 | 미착수 |
+| `QKM_decay` | 7 | 미착수 |
+
+## 13. 리스크
+
+1. **논문 자체의 오류** (특히 Prop 4.1, (5.7)의 균일성). Phase 0으로 조기 탐지. 발견 시 중단.
+2. **소수정리 부재.** Mathlib 핀 상향과 외부 의존성 필요. 사용자 결정 사항.
+3. **수치 검증의 규모.** 표 2의 약 500개 구간 × 고정밀 유리수 `norm_num`. 정밀도 최소화 실험 필요.
+   그래도 느리면 검증된 구간산술 전술을 별도로 작성해야 한다.
+4. **Tate 대수·연속 확장.** Mathlib에 없으므로 유한 절단으로 재서술. 논문과의 동치성을 별도로
+   증명해야 한다.
+5. **총 규모.** 대략 1.5만~2.5만 줄의 Lean. 한 사람이 진행하면 연 단위 작업이다.
