@@ -1,9 +1,9 @@
 # PLAN — `irrational_zeta_five`의 `sorry`를 없애기 위한 로드맵
 
 기준 문서: `ZETA5_IS_IRRATIONAL.pdf` (A. Fauzan, 2026-09-17). 절/식 번호는 이 논문을 따른다.
-현재 상태(2026-09-24): §1.1 환원과 Phase 0~4 완료. `QKM_decay`는 `realBound`(Phase 4, 완료)와
-`normFactor_growth`(Phase 6)로부터 증명되었다. 남은 `sorry`는 `QKM_mem_int`(Phase 5)와
-`normFactor_growth`(Phase 6) 두 개다(§12).
+현재 상태(2026-09-24): §1.1 환원과 Phase 0~5 완료. `QKM_decay`는 `realBound`(Phase 4, 완료)와
+`normFactor_growth`(Phase 6)로부터, `QKM_mem_int`는 Prop 5.1(Phase 5, 완료)로부터 증명되었다.
+남은 `sorry`는 `normFactor_growth`(Phase 6) 하나다(§12).
 
 ## 0. 원칙
 
@@ -201,29 +201,43 @@ Prop 6.3은 **점근형**으로 증명한다: 모든 `ε > 0`에 대해 결국 `
 - 결과: `realBound`(Prop 6.3 점근형)는 표준 공리(`propext`, `Classical.choice`, `Quot.sound`)만 쓴다.
   `native_decide`는 쓰지 않는다(`decide +kernel`은 커널 검사라 추가 공리가 없다).
 
-## 7. Phase 5 — p-진 정수성 (§3–§4) → Prop 5.1
+## 7. Phase 5 — p-진 정수성 (§3–§4) → Prop 5.1 (완료, 2026-09-24)
 
-가장 위험한 Phase. Phase 0에서 검증한 뒤에만 착수한다.
+`QKM_mem_int`는 `Zeta5/Integrality.lean`의 `QKM_integral`(Prop 5.1)이고, 이는 네 개의 국소
+하한(`Zeta5/LocalBounds.lean`)에서 나온다. 모두 표준 공리만 쓴다. 평가는 `VGe p w q`
+(`‖q‖_p ≤ p^{−w}`)와 계수별 `PolyVGe`로 다루고, 가중치는 두 배(정수)로 쓴다(`PBound.lean`).
+논문과 다른 길을 택한 곳이 여럿 있다. 특히 **Lemma 3.1, 3.2(분배 공식)와 Tate 대수는 쓰지 않는다.**
 
-- [ ] §3 범함수 `τ`, 당김 (3.1), 반사·차분 항등식 (3.2), (3.3). Bernoulli 다항식의 `B_n(1−x)`,
-      `B_n(x+1) − B_n(x)` 항등식은 Mathlib `Polynomial.bernoulli`에 일부 있음(확인 필요).
-- [ ] **Bernoulli 곱셈 정리** (DLMF 24.4.18, Lemma 3.2에 필요): Mathlib에 없음. 생성함수로 증명.
-- [ ] von Staudt–Clausen: Mathlib `Bernoulli.vonStaudt_clausen` 있음 → `v_p(κ_d) ≥ −1`.
-- [ ] Tate 대수 `ℚ_p⟨z⟩`: Mathlib에 없음. 논문은 수렴 급수의 연속 확장을 쓰지만, 실제로 필요한 것은
-      **유한 절단**에서의 평가 하한이므로 `PowerSeries ℚ_p`의 계수 하한 조건으로 대체하는 것을
-      권장한다. Lemma 3.1을 이 형태로 다시 서술한다.
-- [ ] (3.5) 원거리 극의 전개, Lemma 3.2 분배 공식.
-- [ ] Lemma 3.3 (작은 소수): 정수값 다항식의 이항 기저(Mathlib `Polynomial.binomial`? 없으면 직접),
-      (3.8), (3.9), (3.10). 기저 변환 (3.11)과 (3.12).
-- [ ] **Prop 4.1 (내부 범위)**: CRT로 만든 `ℤ_p`-유니모듈러 기저 (4.5), 가중치 (4.6)~(4.8),
-      "각 성분의 평가 ≥ 두 행 가중치의 합"에서 `det`의 Gauss 평가 하한. 논문의 서술이 가장
-      압축된 곳이며 Phase 0의 검증 대상이다. `Polynomial.gaussNorm`(Mathlib에 있음)을 평가로 쓴다.
-- [ ] Lemma 4.2: 여인자 전개(complementary minors). Mathlib에는 일반 Laplace 전개가 없어
-      `Matrix.det_add`류를 직접 증명해야 한다. `Zeta5/DetRank.lean`.
-- [ ] Prop 4.3 (외부 범위) 및 `p > K`.
-- [ ] Legendre 공식 (5.3): Mathlib `padicValNat_factorial` 계열 사용.
-- [ ] Prop 5.1: 모든 `p`에 대해 `v_p(m_{K,M} F_K) ≥ 0` → 계수가 정수.
-- 규모: 매우 큼(5천~1만 줄).
+- [x] §3 범함수: `Tau.lean`. `τ(P) = L(P''')/24`, `κ_d = τ(x^d)`, 차분 항등식 (3.3),
+      Bernoulli 곱셈 정리(최종 증명에는 불필요해졌다), 극이 정수인 유리함수의 `τ_X`(`tauR`),
+      당김 (3.1) `μ_X(A/D_S) = τ_X(x⁵A(−x²)/D_S(−x²))`(`muX_eq_tauR`).
+- [x] 값 경계 (3.9): `Binom.lean`. Newton 공식과 이항 기저의 계수 경계로
+      `v_p(τ(Q)) ≥ min v_p(Q(n)) − 4⌊log_p D⌋`. 논문의 `−v_p(24)` 손실이 없다(`τ(ΔF) = [x⁴]F`).
+      `ValueTau.lean`: 임의의 연속 정수 `D`개에서의 값으로 같은 경계(이동한 이항 기저).
+- [x] **Lemma 3.3과 (3.11), (3.12)**: `SmallPrimes.lean`, `SmallPrimeBound.lean`. `C(x+K, k)` 기저로
+      전개하고, `k ≤ 2K`는 유수(`(K!)²/∏(r−s)`의 평가를 배수 세기로), `k > 2K`는 다항식 부분의 값
+      (각 `p^j` 단계에서 손실 ≤ 2)으로 막는다. 기저 `q_i`의 정수값성은 연속 정수의 곱으로 보였다.
+- [x] `p > K`: `BigPrimes.lean`. **기저 변환 없이** `G_K`의 모든 성분이 정수다. `|r| < p`인 극에서
+      합동인 쌍은 `r, r − p`뿐이고, `H⁽⁵⁾_m ≡ H⁽⁵⁾_{p−1−m}`(`LocalTau.lean`)으로 나눗셈 차분이
+      정수가 된다. 다항식 부분은 `κ_d`가 `d ≤ 4p − 2`에서 정수(von Staudt–Clausen)라서 정수.
+- [x] **Prop 4.1 (내부 범위)**: `InnerRange.lean` 외. 분배 공식 대신 **값 경계**를 쓴다: 창
+      `K+1, …, K+D`(`D = 104n+2`, `p² > 200K`)에서 `Q(n) = g(n) − ∑ Res_r/(n−r)`이고, 극 `r`의
+      유수는 `v ≥ E_c + 1`, 창의 값은 `v ≥ E_c`(`c`는 `r`, `n`의 제곱류)이므로 성분 평가가
+      `min_c E_c − 4` 이상이다(`InnerEntry.lean`의 `PolyVGe_entry`). 이는 (4.2), (4.3)과 같다.
+      그 뒤는 논문대로: CRT 유니모듈러 기저 (4.5)(`Unimodular.lean`), `L_a ≥ 0`과 `∑ L_a = h`
+      (`InnerCount.lean`; 순위의 전단사, `pℓ_N(a) ≤ 2N + p`), 반가중치 비교
+      (`Zc − Za + 1 + (ℓ_K(a) − ℓ_K(c))/2 ≥ 0`).
+- [x] **Lemma 4.2**: `DetBound.lean`. 여인자 전개 없이 두 갈래로: `−z`는 영 가중치를 `−1/2`로 낮추면
+      `p⁻¹L`의 성분이 가중치 조건을 만족하는 것에서, `−r`은 `det(A + p⁻¹UL'Uᵀ)`를 블록 행렬
+      `[[A, −U], [p⁻¹L'Uᵀ, 1]]`(Schur)의 행렬식으로 보고 행·열 가중치를 따로 둔 행렬식 경계로.
+- [x] **Prop 4.3 (외부 범위)**: `OuterClass.lean`, `OuterEntry.lean`, `OuterRange.lean`.
+      `τ = τ_low + p⁻¹τ_high`(`d ≤ 4p−2`의 모멘트만 남김)로 `G = A + p⁻¹L`, `L`은 단항식 기저에서
+      마지막 `r_p`개 행·열에만 있다. 기저 (4.11), 성분 경계 (4.12)(극별 경계와 나눗셈 차분),
+      정확한 류 크기 `ℓ_K(c) = 2⌊K/p⌋ + [c ≤ v] + [c ≥ p−v]`로 가중치 합과 영 가중치 개수를
+      (4.14)와 비교한다. 영 류(`p, 2p`)의 가중치는 논문의 `(−2, 0)` 대신 `(−3/2, 0)`도 성립하므로
+      그것을 썼다(`K ≥ 2p`에서 1만큼 더 강함; `γ_p^out` 이하임을 보이는 데는 문제 없다).
+- [x] Prop 5.1: `Integrality.lean`. `p ≤ 2h`에서는 (5.1)의 경우별로, `p > 2h`에서는 `S_K`가 단원.
+- 규모: 새 파일 22개, 약 5.7천 줄.
 
 ## 8. Phase 6 — 소수 합 (§5.1–5.3, 부록 B) → (5.21)
 
@@ -272,12 +286,28 @@ Zeta5/Potential.lean   -- Phase 4: (6.2)의 수치 검증 (A.9) (완료)
 Zeta5/PotentialData.lean -- Phase 4: 표 2의 분할점 (생성됨)
 Zeta5/Energy.lean      -- Phase 4: (6.7)~(6.9) (완료)
 Zeta5/RealBound.lean   -- Phase 4: Prop 6.3 점근형, (A.10) (완료)
-Zeta5/Bernoulli.lean   -- Phase 5: τ, 곱셈 정리, 반사·차분
-Zeta5/Local.lean       -- Phase 5: Lemma 3.1~3.3
-Zeta5/DetRank.lean     -- Phase 5: Lemma 4.2
-Zeta5/Inner.lean       -- Phase 5: Prop 4.1
-Zeta5/Outer.lean       -- Phase 5: Prop 4.3
-Zeta5/Integrality.lean -- Phase 5: Prop 5.1
+Zeta5/PoleDen.lean     -- Phase 5: `poleDen`의 부분분수 (Gram.lean에서 분리)
+Zeta5/Tau.lean         -- Phase 5: τ, τ_X, 당김 (3.1) (완료)
+Zeta5/PBound.lean      -- Phase 5: VGe/PolyVGe, 가중치 행렬식 경계, 정수성 판정 (완료)
+Zeta5/Binom.lean       -- Phase 5: Newton 공식, 값 경계 (3.9) (완료)
+Zeta5/Count.lean       -- Phase 5: 구간의 배수 세기 (완료)
+Zeta5/SmallPrimes.lean -- Phase 5: Lemma 3.3 (완료)
+Zeta5/SmallPrimeBound.lean -- Phase 5: (3.11), (3.12) (완료)
+Zeta5/GramBasis.lean   -- Phase 5: Gram 행렬의 기저 변환 (완료)
+Zeta5/LocalTau.lean    -- Phase 5: ℤ_(p), κ_d, H⁽⁵⁾ 합동, 나눗셈 차분 (완료)
+Zeta5/BigPrimes.lean   -- Phase 5: p > K (완료)
+Zeta5/Unimodular.lean  -- Phase 5: CRT 기저의 유니모듈러성 (완료)
+Zeta5/ValueTau.lean    -- Phase 5: 창에서의 값 경계 (완료)
+Zeta5/SqClass.lean     -- Phase 5: 제곱류와 평가 (완료)
+Zeta5/InnerEntry.lean  -- Phase 5: (4.2), (4.3) (완료)
+Zeta5/InnerCount.lean  -- Phase 5: (4.4)~(4.7)의 배정 (완료)
+Zeta5/InnerRange.lean  -- Phase 5: Prop 4.1 (완료)
+Zeta5/DetBound.lean    -- Phase 5: Lemma 4.2 (완료)
+Zeta5/OuterClass.lean  -- Phase 5: 외부 범위의 류 (완료)
+Zeta5/OuterEntry.lean  -- Phase 5: τ_low, τ_high, 극별 경계, 나눗셈 차분 (완료)
+Zeta5/OuterRange.lean  -- Phase 5: Prop 4.3 (완료)
+Zeta5/LocalBounds.lean -- Phase 5: 네 국소 하한 (완료)
+Zeta5/Integrality.lean -- Phase 5: Prop 5.1 (완료)
 Zeta5/PrimeSum.lean    -- Phase 6: normFactor_growth (5.21)
 Zeta5/Constants.lean   -- 부록 B 유리수 상수 (Ū, A_M, (7.2)의 여유) (완료)
 Zeta5Test/            -- 정의의 작은 경우 테스트 (`lake test`)
@@ -308,22 +338,20 @@ scripts/               -- Phase 0 수치 검증
 | `energy_const_le` (6.4), (A.10) | 4 | 완료 (`decide +kernel`) |
 | `realBound` (Prop 6.3, 점근형) | 4 | 완료 (표준 공리만) |
 | `QKM_decay` | 7 | 완료 (`realBound`, `normFactor_growth`로부터) |
-| `bernoulli_multiplication` | 5 | 미착수 |
-| `local_small_primes_33` | 5 | 미착수 |
-| `inner_range_41` | 5 | 미착수 (Phase 0 검증 선행) |
-| `det_rank_42` | 5 | 미착수 |
-| `outer_range_43` | 5 | 미착수 |
-| `QKM_mem_int` | 5 | `sorry` (`Theorem21.lean`) |
+| `smallPrime_bound` (3.12) | 5 | 완료 (`SmallPrimeBound.lean`) |
+| `inner_bound` (Prop 4.1) | 5 | 완료 (분배 공식 없이, `InnerRange.lean`) |
+| `lemma42` (Lemma 4.2) | 5 | 완료 (`DetBound.lean`) |
+| `outer_bound` (Prop 4.3) | 5 | 완료 (`OuterRange.lean`) |
+| `big_bound` (`p > K`) | 5 | 완료 (`BigPrimes.lean`) |
+| `QKM_mem_int` (Prop 5.1) | 5 | 완료 (`Integrality.lean`의 `QKM_integral`, 표준 공리만) |
 | `normFactor_growth` (5.21) | 6 | `sorry` (`PrimeSum.lean`, 소수정리 의존성 결정 선행) |
 
 ## 13. 리스크
 
-1. **논문 자체의 오류** (특히 Prop 4.1, (5.7)의 균일성). Phase 0에서는 반례를 찾지 못했다(§2).
-   다만 Prop 4.1은 가정 `K ≥ 200M²`이 성립하는 영역에서 직접 검사할 수 없었으므로, 형식화 중에
-   증명의 빈틈이 드러날 가능성은 남아 있다.
+1. **논문 자체의 오류** (특히 (5.7)의 균일성). Phase 0에서는 반례를 찾지 못했다(§2).
+   Prop 4.1을 포함한 §3~§5.1은 Phase 5에서 형식화되었으므로 더 이상 리스크가 아니다.
 2. **소수정리 부재.** Mathlib 핀 상향과 외부 의존성 필요. 사용자 결정 사항.
 3. **수치 검증의 규모.** (해결) 표 2의 684개 구간은 검증된 유리수 구간 검사기를 `decide +kernel`로
    실행해 약 280초, 최대 12.5GB 메모리로 검사된다. CI 메모리가 부족하면 청크를 더 잘게 나누면 된다.
-4. **Tate 대수·연속 확장.** Mathlib에 없으므로 유한 절단으로 재서술. 논문과의 동치성을 별도로
-   증명해야 한다.
+4. **Tate 대수·연속 확장.** (해결) 내부 범위를 값 경계로 증명해 필요 없어졌다.
 5. **총 규모.** 대략 1.5만~2.5만 줄의 Lean. 한 사람이 진행하면 연 단위 작업이다.

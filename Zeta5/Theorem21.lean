@@ -8,6 +8,7 @@ import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Zeta5.Defs
 import Zeta5.Degree
 import Zeta5.Gram
+import Zeta5.Integrality
 import Zeta5.PrimeSum
 import Zeta5.RealBound
 
@@ -35,8 +36,8 @@ namespace Zeta5
 
 /-- Proposition 5.1: for `M ≥ 40` and `K ≥ 200M²`, `Q_{K,M} ∈ ℤ[X]`. -/
 theorem QKM_mem_int {n M : ℕ} (hM : 40 ≤ M) (hK : 200 * M ^ 2 ≤ K n) :
-    ∃ q : ℤ[X], q.map (Int.castRingHom ℚ) = Q n M := by
-  sorry
+    ∃ q : ℤ[X], q.map (Int.castRingHom ℚ) = Q n M :=
+  QKM_integral hM hK
 
 /-- (2.9): `Q_{K,M}` has degree exactly `h`. Proved in `Zeta5.Degree`. -/
 theorem QKM_natDegree (n M : ℕ) : (Q n M).natDegree = dim n :=
