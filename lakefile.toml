@@ -1,5 +1,6 @@
 name = "Zeta5"
 version = "0.1.0"
+license = "(Apache-2.0 OR MIT)"
 keywords = ["math"]
 defaultTargets = ["Zeta5"]
 
@@ -7,6 +8,7 @@ defaultTargets = ["Zeta5"]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
+weak.linter.style.header.license = "Released under Apache 2.0 or MIT license, at your option, as described in the file COPYRIGHT."
 maxSynthPendingDepth = 3
 
 [[require]]

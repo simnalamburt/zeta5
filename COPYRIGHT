@@ -1,0 +1,16 @@
+Short version for non-laywers:
+  The zeta5 project is dual-licensed under Apache 2.0 and MIT terms.
+
+Longer version:
+  Copyright 2026 Jihyeon Kim
+
+  Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+  https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+  <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+  option. This file may not be copied, modified, or distributed
+  except according to those terms.
+
+SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+Third-party materials, including the accompanying research paper and dependencies,
+remain subject to their respective licenses.
