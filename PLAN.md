@@ -1,8 +1,8 @@
 # PLAN — `irrational_zeta_five`의 `sorry`를 없애기 위한 로드맵
 
 기준 문서: `ZETA5_IS_IRRATIONAL.pdf` (A. Fauzan, 2026-09-17). 절/식 번호는 이 논문을 따른다.
-현재 상태(2026-09-23): §1.1 환원과 Phase 0, 1 완료. 남은 `sorry`는 `Zeta5/Theorem21.lean`의
-네 명제(Theorem 2.1의 네 부분)이다.
+현재 상태(2026-09-24): §1.1 환원과 Phase 0, 1, 2 완료. 남은 `sorry`는 `Zeta5/Theorem21.lean`의
+세 명제 `QKM_mem_int`, `QKM_pos`, `QKM_decay`이다.
 
 ## 0. 원칙
 
@@ -116,11 +116,17 @@
       (극 두 개, 1차 몫), `ℓ`, K ≤ 120의 `γ_out` 10개, `γ_in` 7개(`decide`). 틀린 값을 넣으면 `decide`가
       실패함도 확인했다. `padicValRat`는 커널에서 계산되지 않아 `v_p(S_K)`는 테스트하지 못했다.
 
-## 4. Phase 2 — 차수 (§2.3)
+## 4. Phase 2 — 차수 (§2.3, `Zeta5/Degree.lean`) (완료, 2026-09-24)
 
-- [ ] `[X] G_K = V · diag(...) · Vᵀ` (Vandermonde `V_{ij} = (-j²)^i`). Mathlib `Matrix.det_vandermonde` 사용.
-- [ ] `[X^h] Δ_K = (-1)^{h(h-1)/2} ∏ j⁴ D_N(-j²)⁵ ≠ 0` (2.9). 각 인자가 0이 아님은 `positivity`급.
-- [ ] 결론 `natDegree (Q K M) = h`. 규모: 작음(수백 줄).
+- [x] `G_eq`: 각 성분이 `X`에 대해 1차이므로 `G = X • B + A` (`Glin`, `Gconst`). Mathlib
+      `coeff_det_X_add_C_card`로 `[X^h] Δ_K = det B` (`coeff_Δ_dim`), `natDegree_det_X_add_C_le`로 차수 ≤ h.
+- [x] `Glin_eq`: `j ≤ N`의 잔차는 0이고 남는 극은 `N < j ≤ K`의 정확히 `h`개이므로
+      `B = Vᵀ · diag(c) · V`, `V_{kj} = (-(N+1+k)²)^j` (Mathlib `vandermonde`).
+      `det B = (det V)² ∏ c_k ≠ 0` (`det_vandermonde_ne_zero_iff`; `c_k ≠ 0`은 `D_N(-j²) ≠ 0`과
+      `D_K`의 분리성 `separable_prod_X_sub_C_iff'`에서).
+- [x] `natDegree_Q : (Q n M).natDegree = dim n` (모든 `n`, `M`). `QKM_natDegree`의 `sorry`를 제거했다.
+- 계획과 달리 (2.9)의 선행계수 값 `(-1)^{h(h-1)/2} ∏ j⁴ D_N(-j²)⁵` 자체는 증명하지 않았다.
+  차수에는 `≠ 0`만 필요하다(Phase 0에서 값은 수치로 확인했다). 약 190줄.
 
 ## 5. Phase 3 — ζ(5)에서의 양성 (§2.4, Prop 2.2)
 
@@ -215,7 +221,7 @@ Phase 5와 독립. 가장 "수학적으로 정직한" 부분이며 논문이 틀
 Zeta5/Main.lean        -- 최종 정리와 §1.1 환원 (완료)
 Zeta5/Defs.lean        -- Phase 1 (완료)
 Zeta5/Theorem21.lean   -- Theorem 2.1의 네 명제. Phase 7에서 각 Phase의 결과를 모은다
-Zeta5/Degree.lean      -- Phase 2
+Zeta5/Degree.lean      -- Phase 2 (완료)
 Zeta5/Moment.lean      -- Phase 3: w, 모멘트, Hermite 공식, 양정치
 Zeta5/Andreief.lean    -- Phase 4
 Zeta5/LogEnergy.lean   -- Phase 4: Lemma 6.2, arcsine 퍼텐셜
@@ -246,7 +252,7 @@ scripts/               -- Phase 0 수치 검증
 |---|---|---|
 | `Zeta5.irrational_of_smallIntPolys` | — | 완료 |
 | `Zeta5.exists_smallIntPolys_zeta5` | 1 | 완료 (아래 네 명제로부터) |
-| `QKM_natDegree` | 2 | `sorry` (`Theorem21.lean`) |
+| `QKM_natDegree` | 2 | 완료 (`Degree.lean`의 `natDegree_Q`) |
 | `QKM_pos` | 3 | `sorry` (`Theorem21.lean`) |
 | `hermite_integral_five` | 3 | 미착수 |
 | `andreief` | 4 | 미착수 |
