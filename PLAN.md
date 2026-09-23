@@ -1,8 +1,9 @@
 # PLAN — `irrational_zeta_five`의 `sorry`를 없애기 위한 로드맵
 
 기준 문서: `ZETA5_IS_IRRATIONAL.pdf` (A. Fauzan, 2026-09-17). 절/식 번호는 이 논문을 따른다.
-현재 상태(2026-09-24): §1.1 환원과 Phase 0~3 완료. 남은 `sorry`는 `Zeta5/Theorem21.lean`의
-두 명제 `QKM_mem_int`(Phase 5), `QKM_decay`(Phase 4, 6, 7)이다.
+현재 상태(2026-09-24): §1.1 환원과 Phase 0~4 완료. `QKM_decay`는 `realBound`(Phase 4, 완료)와
+`normFactor_growth`(Phase 6)로부터 증명되었다. 남은 `sorry`는 `QKM_mem_int`(Phase 5)와
+`normFactor_growth`(Phase 6) 두 개다(§12).
 
 ## 0. 원칙
 
@@ -153,28 +154,52 @@
       `Δ_K(ζ(5)) > 0`을 얻는다. 양정치성은 이차형식의 피적분함수가 유한개 근을 제외한 `(0,∞)`에서
       양수라는 것으로 보였다.
 
-## 6. Phase 4 — 실수 감쇠 (§6, 부록 A) → Prop 6.3
+## 6. Phase 4 — 실수 감쇠 (§6, 부록 A) → Prop 6.3 (완료, 2026-09-24)
 
-Phase 5와 독립. 가장 "수학적으로 정직한" 부분이며 논문이 틀렸다면 여기서 틀릴 가능성은 낮다.
+Prop 6.3은 **점근형**으로 증명한다: 모든 `ε > 0`에 대해 결국 `log F_K(ζ(5)) ≤ (Ū + ε) K²`
+(`Zeta5/RealBound.lean`의 `realBound`). 논문의 명시적 `24 K log K + 200 K`는 필요 없고, 이 덕분에
+§6의 모든 저차항을 `o(K²)`로 다룰 수 있다. `QKM_decay`는 `realBound`와 `normFactor_growth`(5.21)로부터
+`δ = −1600(A_200 + Ū) − 139/5 > 0`(`Constants.margin_72_pos`)을 이용해 증명했다.
 
-- [ ] **Andréief 항등식** (6.10): Mathlib에 없음. `det (∫ φ_i ψ_j) = (1/h!) ∫ det[φ_i(y_j)] det[ψ_i(y_j)]`.
-      Leibniz 전개 + Fubini로 직접 증명. 일반형으로 별도 파일 `Zeta5/Andreief.lean`.
-- [ ] Lemma 6.2 (질량 0 측도의 로그 에너지 ≤ 0): Gaussian 커널 `e^{-s|z-w|²}`의 양정치성 +
-      `log r = ½∫₀^∞ (e^{-s} − e^{-sr²})/s ds`. 측도론 작업. `Zeta5/LogEnergy.lean`.
-- [ ] arcsine 측도의 퍼텐셜 (A.1)과 자기 에너지 `log((b−a)/4)`: Mathlib에 없음. 치환적분으로 증명.
-- [ ] 원 위 정규화 호길이 측도의 퍼텐셜 `log max(|t−u|, ε)`.
-- [ ] (6.6), (6.7)~(6.9): 정규화 및 필드 수정. 부등식 조작.
-- [ ] **Lemma 6.1 (A.9)**: 표 1의 16개 구간, 표 2의 684개 부분구간마다 `B(l,r) < −1329/200`을
-      (A.3), (A.4)의 유리수 상·하계로 검증. 이 부분은 사실상 검증된 수치계산이다.
-      계획: `log`, `arctan`, `sqrt`의 유리수 상·하계 보조정리를 한 번 만들고(Mathlib
-      `Real.log_le_sub_one_of_pos`, `Real.abs_log_sub_add_sum_range_le`, `Real.arctan` 급수 등 확인 필요),
-      각 구간은 `norm_num`으로 닫는다. Phase 0 결과: 논문의 2^-144 대신 **분모 2^24의 dyadic 구간**이면
-      −1329/200을 증명하기에 충분하다(분모 2^26이면 −6645002/10^6까지). 가장 빡빡한 구간은
-      (j,d,k) = (30,6,26)으로 여유가 2.7×10^-6이다. 여기가 이 Phase의 시간 대부분이다.
-- [ ] (A.10) `I(ρ)`, `C*`의 유리수 구간 → (6.4).
-- [ ] 스케일링 (6.12), 가중치 상계 (6.11), 계승 부등식 (Mathlib `Stirling` 파일 참고), (6.14), (6.15).
-- [ ] Prop 6.3.
-- 규모: 큼(3~5천 줄 + 수치 검증 파일).
+- [x] **Andréief 항등식** (6.10): `Zeta5/Andreief.lean`. Leibniz 전개 + `integral_fintype_prod_eq_prod`.
+- [x] (6.15) `log S_K`: `Zeta5/LogS.lean`. Stirling(`Stirling.log_stirlingSeq'_antitone`)과
+      `∑ log((2i)!) ≥ ∫`를 `x²log(2x) − 3x²/2`의 증분으로 비교.
+- [x] (6.11), (6.12): `Zeta5/Field.lean` (`wt_le`, `sum_log_ge`, `sum_log_le`).
+- [x] (6.14) `log Δ_K`: `Zeta5/LogDelta.lean`. Andréief → 점별 상계
+      `vdet² ∏ρ ≤ e^B ∏ψ(y_k)`(`ψ = 2^17(1+y^17)e^{−y/K}`) → 적분.
+- [x] **Lemma 6.2** (질량 0 측도의 로그 에너지 ≤ 0): `Zeta5/LogEnergy.lean`.
+      논문의 원(반지름 ε) 정규화 대신 **커널 `log((x−y)² + δ²)`로 정규화**했다. 이러면 커널이 받침 위에서
+      유계라 극한 논법이 필요 없다. Gaussian 커널의 양정치성(제곱 완성 + Fubini)과 Mathlib의
+      Frullani 적분(`Frullani.integral_Ioi_eq`)으로 증명.
+- [x] arcsine 측도와 퍼텐셜 (A.1): `Zeta5/Arcsine.lean`. arcsine 측도를 `θ ↦ m + R cos θ`에 의한
+      균등분포의 상으로 정의하면 적분이 원평균이 된다. Joukowski 인수분해
+      `|c − Re z| = |z − w||z − w'|/2` (`w + w' = 2c`, `ww' = 1`)와 Mathlib의
+      `circleAverage_log_norm_sub_const_eq_posLog`로 (A.1)을 얻는다.
+- [x] 교차항 오차: `Zeta5/Regularize.lean`. 논문의 `60√ε` 대신, 정규화된 퍼텐셜이 `2U`로 **균등
+      수렴**한다는 것을 Dini 정리(`Antitone.tendstoUniformlyOn_of_forall_tendsto`)로 보였다.
+      필요한 것은 `o(1)`뿐이므로 ρ의 질량-공 상계가 필요 없다.
+- [x] ρ (표 1), `U^ρ`, `I(ρ)`: `Zeta5/Rho.lean`. `I(ρ)`는 (A.2)의 닫힌 꼴
+      `∑_{j,k} c_j c_k log((b_m − a_m)/4)` (`m = max(j,k)`)로 **정의**하고, 필요한 부등식
+      `∫∫ log((x−y)²+δ²) dρdρ ≥ 2I(ρ)`만 증명했다(중첩 구간에서 큰 구간의 퍼텐셜이 상수).
+- [x] (6.7), (6.8), (6.9): `Zeta5/Energy.lean`의 `energy_bound`. `t ≥ 2`는 (6.8)을 직접 증명.
+- [x] **`potential_le_M0`** (Lemma 6.1의 (6.2), `0 < t ≤ 2`): `Zeta5/Potential.lean`. 표 2의 684개
+      구간에서 (A.9)를 검증한다. 구성:
+      * `Zeta5/Enclose.lean`: `log`(artanh 급수 + `2ᵉ` 환원), `arctan`(교대급수 + `π/4`, `π/2` 환원),
+        `√`(Newton 추측값을 제곱으로 검사), `π`(Mathlib 20자리)의 유리수 상·하계와 건전성 증명.
+        중간값은 `2⁻⁴⁰`의 배수로 반올림한다.
+      * `Zeta5/VClosed.lean`: (A.5) `V(s²) = Φ(s)`(FTC), `Φ' = 2P`, `P`가 `[0, 1/2]`에서 증가
+        (`P' ≥ 0 ⟺ s² ≤ 711/880`), `[1/2, ∞)`에서 `P ≥ 0`(`arctan(s/α) ≥ π/3`). 따라서
+        `P(√q₋) ≤ 0 ≤ P(√q₊)`이면 `V`는 `(0, q₋]`에서 감소, `[q₊, ∞)`에서 증가.
+      * `U^{ω_j}(t)`는 `|t − m_j|`의 증가함수이므로 `[l, r]`에서 `max(U(l), U(r))`로 막힌다.
+        `[q₋, q₊]`에서는 (A.5)의 단조 조각으로 `V ≥ V*`.
+      * 검사기 `checkIv`/`checkChain`을 `decide +kernel`로 실행(76구간씩 9개 정리, 약 280초, 최대
+        메모리 12.5GB). 분할점은 `Zeta5/PotentialData.lean`(`scripts/gen_table2.py`로 생성);
+        검사기의 건전성은 분할점 목록에 의존하지 않는다.
+      * Phase 0의 Python 원형과 같은 알고리즘이다: 가장 빡빡한 구간 (30,6,26)의 여유 2.69×10⁻⁶.
+- [x] **`energy_const_le`** (6.4), (A.10): `Zeta5/RealBound.lean`. `I(ρ)`의 16개 로그와 `log α`,
+      `log 2λ`를 `Enclose.logLo`로 막고 `decide +kernel`로 `λM₀ − I(ρ) + C* ≤ Ū`를 확인한다.
+- 결과: `realBound`(Prop 6.3 점근형)는 표준 공리(`propext`, `Classical.choice`, `Quot.sound`)만 쓴다.
+  `native_decide`는 쓰지 않는다(`decide +kernel`은 커널 검사라 추가 공리가 없다).
 
 ## 7. Phase 5 — p-진 정수성 (§3–§4) → Prop 5.1
 
@@ -227,24 +252,34 @@ Phase 5와 독립. 가장 "수학적으로 정직한" 부분이며 논문이 틀
 ```
 Zeta5/Main.lean        -- 최종 정리와 §1.1 환원 (완료)
 Zeta5/Defs.lean        -- Phase 1 (완료)
-Zeta5/Theorem21.lean   -- Theorem 2.1의 네 명제. Phase 7에서 각 Phase의 결과를 모은다
+Zeta5/Theorem21.lean   -- Theorem 2.1의 네 명제
 Zeta5/Degree.lean      -- Phase 2 (완료)
 Zeta5/Weight.lean      -- Phase 3: w와 모멘트 (완료)
 Zeta5/PoleIntegrals.lean -- Phase 3: 극 공식의 유리함수 적분 (완료)
 Zeta5/Hermite.lean     -- Phase 3: 극 공식 (완료)
 Zeta5/Gram.lean        -- Phase 3: 부분분수, Gram 양정치성 (완료)
-Zeta5/Andreief.lean    -- Phase 4
-Zeta5/LogEnergy.lean   -- Phase 4: Lemma 6.2, arcsine 퍼텐셜
-Zeta5/Potential.lean   -- Phase 4: 부록 A 표 1, 표 2 검증
-Zeta5/RealBound.lean   -- Phase 4: Prop 6.3
+Zeta5/Andreief.lean    -- Phase 4: Andréief 항등식 (완료)
+Zeta5/Field.lean       -- Phase 4: V, Riemann 합 (6.12), 가중치 상계 (6.11) (완료)
+Zeta5/LogS.lean        -- Phase 4: (6.15) (완료)
+Zeta5/LogDelta.lean    -- Phase 4: (6.14) (완료)
+Zeta5/LogEnergy.lean   -- Phase 4: Lemma 6.2 (정규화 커널) (완료)
+Zeta5/Arcsine.lean     -- Phase 4: arcsine 측도와 (A.1) (완료)
+Zeta5/Regularize.lean  -- Phase 4: 정규화 퍼텐셜의 균등수렴 (Dini) (완료)
+Zeta5/Rho.lean         -- Phase 4: 표 1의 ρ, U^ρ, I(ρ) (완료)
+Zeta5/Enclose.lean     -- Phase 4: log, arctan, √, π의 유리수 상·하계 (완료)
+Zeta5/VClosed.lean     -- Phase 4: (A.5), V의 단조성 (완료)
+Zeta5/Potential.lean   -- Phase 4: (6.2)의 수치 검증 (A.9) (완료)
+Zeta5/PotentialData.lean -- Phase 4: 표 2의 분할점 (생성됨)
+Zeta5/Energy.lean      -- Phase 4: (6.7)~(6.9) (완료)
+Zeta5/RealBound.lean   -- Phase 4: Prop 6.3 점근형, (A.10) (완료)
 Zeta5/Bernoulli.lean   -- Phase 5: τ, 곱셈 정리, 반사·차분
 Zeta5/Local.lean       -- Phase 5: Lemma 3.1~3.3
 Zeta5/DetRank.lean     -- Phase 5: Lemma 4.2
 Zeta5/Inner.lean       -- Phase 5: Prop 4.1
 Zeta5/Outer.lean       -- Phase 5: Prop 4.3
 Zeta5/Integrality.lean -- Phase 5: Prop 5.1
-Zeta5/PrimeSum.lean    -- Phase 6
-Zeta5/Constants.lean   -- Phase 6, 7: 부록 B 유리수 상수
+Zeta5/PrimeSum.lean    -- Phase 6: normFactor_growth (5.21)
+Zeta5/Constants.lean   -- 부록 B 유리수 상수 (Ū, A_M, (7.2)의 여유) (완료)
 Zeta5Test/            -- 정의의 작은 경우 테스트 (`lake test`)
 scripts/               -- Phase 0 수치 검증
 ```
@@ -265,19 +300,21 @@ scripts/               -- Phase 0 수치 검증
 | `QKM_natDegree` | 2 | 완료 (`Degree.lean`의 `natDegree_Q`) |
 | `QKM_pos` | 3 | 완료 (`Gram.lean`의 `aeval_Q_pos`) |
 | `integral_wt_div_sq_add_sq` (극 공식) | 3 | 완료 (Hermite 공식 없이) |
-| `andreief` | 4 | 미착수 |
-| `logEnergy_nonpos_of_zero_mass` | 4 | 미착수 |
-| `potential_bound_A9` | 4 | 미착수 |
-| `realBound_prop63` | 4 | 미착수 |
+| `andreief` | 4 | 완료 |
+| `logEnergy_nonpos` (Lemma 6.2) | 4 | 완료 (정규화 커널) |
+| `energy_bound` (6.9) | 4 | 완료 |
+| `logΔ_le` (6.14), `logS_le` (6.15) | 4 | 완료 |
+| `potential_le_M0` (A.9) | 4 | 완료 (`decide +kernel`, 684구간) |
+| `energy_const_le` (6.4), (A.10) | 4 | 완료 (`decide +kernel`) |
+| `realBound` (Prop 6.3, 점근형) | 4 | 완료 (표준 공리만) |
+| `QKM_decay` | 7 | 완료 (`realBound`, `normFactor_growth`로부터) |
 | `bernoulli_multiplication` | 5 | 미착수 |
 | `local_small_primes_33` | 5 | 미착수 |
 | `inner_range_41` | 5 | 미착수 (Phase 0 검증 선행) |
 | `det_rank_42` | 5 | 미착수 |
 | `outer_range_43` | 5 | 미착수 |
 | `QKM_mem_int` | 5 | `sorry` (`Theorem21.lean`) |
-| `prime_sum_52` | 6 | 미착수 (소수정리 의존성 결정 선행) |
-| `normalization_growth_521` | 6 | 미착수 |
-| `QKM_decay` | 7 | `sorry` (`Theorem21.lean`) |
+| `normFactor_growth` (5.21) | 6 | `sorry` (`PrimeSum.lean`, 소수정리 의존성 결정 선행) |
 
 ## 13. 리스크
 
@@ -285,8 +322,8 @@ scripts/               -- Phase 0 수치 검증
    다만 Prop 4.1은 가정 `K ≥ 200M²`이 성립하는 영역에서 직접 검사할 수 없었으므로, 형식화 중에
    증명의 빈틈이 드러날 가능성은 남아 있다.
 2. **소수정리 부재.** Mathlib 핀 상향과 외부 의존성 필요. 사용자 결정 사항.
-3. **수치 검증의 규모.** 표 2의 684개 구간 × 유리수 `norm_num`. Phase 0에서 필요한 정밀도가
-   2^-24임을 확인했다. 그래도 느리면 검증된 구간산술 전술을 별도로 작성해야 한다.
+3. **수치 검증의 규모.** (해결) 표 2의 684개 구간은 검증된 유리수 구간 검사기를 `decide +kernel`로
+   실행해 약 280초, 최대 12.5GB 메모리로 검사된다. CI 메모리가 부족하면 청크를 더 잘게 나누면 된다.
 4. **Tate 대수·연속 확장.** Mathlib에 없으므로 유한 절단으로 재서술. 논문과의 동치성을 별도로
    증명해야 한다.
 5. **총 규모.** 대략 1.5만~2.5만 줄의 Lean. 한 사람이 진행하면 연 단위 작업이다.

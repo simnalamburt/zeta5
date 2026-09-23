@@ -8,6 +8,8 @@ import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Zeta5.Defs
 import Zeta5.Degree
 import Zeta5.Gram
+import Zeta5.PrimeSum
+import Zeta5.RealBound
 
 /-!
 # Theorem 2.1, split into four statements
@@ -45,10 +47,42 @@ Proved in `Zeta5.Gram`. -/
 theorem QKM_pos (n M : ℕ) : 0 < aeval (riemannZeta 5).re (Q n M) :=
   aeval_Q_pos n M
 
-/-- (2.7): `Q_{40n,200}(ζ(5)) < exp(-139n²/5)` for all sufficiently large `n`. -/
+/-- (2.7): `Q_{40n,200}(ζ(5)) < exp(-139n²/5)` for all sufficiently large `n`.
+
+This is (7.1) and (7.2): Proposition 6.3 (`Zeta5.realBound`) and (5.21) (`Zeta5.normFactor_growth`)
+give `log Q_{K,200}(ζ(5)) ≤ (A_200 + Ū + ε) K²` eventually, and `-1600 (A_200 + Ū) > 139/5`
+(`Zeta5.margin_72_pos`). -/
 theorem QKM_decay :
     ∀ᶠ n : ℕ in atTop,
       aeval (riemannZeta 5).re (Q n 200) < Real.exp (-(139 / 5 : ℝ) * (n : ℝ) ^ 2) := by
-  sorry
+  set δ : ℝ := -1600 * ((AM 200 : ℝ) + Ubar) - 139 / 5 with hδ
+  have hδpos : 0 < δ := by
+    have h : ((139 / 5 : ℚ) : ℝ) < ((-1600 * (AM 200 + Ubar) : ℚ) : ℝ) :=
+      Rat.cast_lt.2 margin_72_pos
+    push_cast at h
+    linarith
+  have hε : 0 < δ / 6400 := by positivity
+  filter_upwards [normFactor_growth (M := 200) (by norm_num) (by norm_num) hε, realBound hε,
+    eventually_ge_atTop 1] with n hm hF hn
+  have hmpos : (0 : ℝ) < normFactor n 200 := by exact_mod_cast normFactor_pos n 200
+  have hQ : aeval (riemannZeta 5).re (Q n 200) =
+      normFactor n 200 * aeval (riemannZeta 5).re (F n) := by
+    rw [Q, map_mul, aeval_C, eq_ratCast]
+  have hFpos : 0 < aeval (riemannZeta 5).re (F n) := by
+    have h := aeval_Q_pos n 200
+    rw [hQ] at h
+    exact pos_of_mul_pos_right h hmpos.le
+  rw [← Real.exp_log (QKM_pos n 200), Real.exp_lt_exp, hQ,
+    Real.log_mul hmpos.ne' hFpos.ne']
+  have hK : (K n : ℝ) = 40 * n := by simp [K]
+  rw [hK] at hm hF
+  have hn1 : (1 : ℝ) ≤ n := by exact_mod_cast hn
+  have hU : (Ubar : ℝ) = -((139 / 5 + δ) / 1600) - AM 200 := by rw [hδ]; ring
+  rw [hU] at hF
+  have key : ((AM 200 : ℝ) + δ / 6400) * (40 * n) ^ 2 +
+      (-((139 / 5 + δ) / 1600) - AM 200 + δ / 6400) * (40 * n) ^ 2 =
+      -(139 / 5) * (n : ℝ) ^ 2 - δ / 2 * (n : ℝ) ^ 2 := by ring
+  have hpos : 0 < δ / 2 * (n : ℝ) ^ 2 := by positivity
+  linarith
 
 end Zeta5
