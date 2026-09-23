@@ -6,6 +6,7 @@ Authors: Jihyeon Kim
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.NumberTheory.Real.Irrational
 import Mathlib.RingTheory.Polynomial.ScaleRoots
+import Zeta5.Theorem21
 
 /-!
 # Irrationality of ζ(5)
@@ -20,7 +21,8 @@ deduces irrationality by a short integrality argument (§1.1).
 * `Zeta5.irrational_of_smallIntPolys` formalises the deduction in §1.1 for an arbitrary real
   number: if such a sequence of integer polynomials exists at `x`, then `x` is irrational.
 * `Zeta5.exists_smallIntPolys_zeta5` is the existence statement provided by Theorem 2.1 of the
-  paper (Sections 2–7 and Appendices A–B). It is currently `sorry`.
+  paper (Sections 2–7 and Appendices A–B), with `Qₙ := Q_{40n,200}` of `Zeta5.Defs`. It is derived
+  from the four parts of Theorem 2.1 stated in `Zeta5.Theorem21`, which are not yet proved.
 * `irrational_zeta_five` combines the two.
 -/
 
@@ -90,14 +92,19 @@ theorem irrational_of_smallIntPolys (x : ℝ)
 there is an integer polynomial `Qₙ` (namely `Q_{40n,200}`) of degree at most `37n` with
 `0 < Qₙ(ζ(5)) < exp(-139 n² / 5)`.
 
-This is the entire content of Sections 2–7 and Appendices A–B of the paper (Hankel determinant
-construction, positivity via the moment representation, `p`-adic estimates, prime-number-theorem
-summation, and the logarithmic-energy bound). It is not yet formalised. -/
+The admissibility condition `K ≥ 200M²` of Theorem 2.1 holds for `M = 200` once `n ≥ 200000`. -/
 theorem exists_smallIntPolys_zeta5 :
     ∀ᶠ n : ℕ in atTop, ∃ Q : ℤ[X], Q.natDegree ≤ 37 * n ∧
       0 < aeval (riemannZeta 5).re Q ∧
         aeval (riemannZeta 5).re Q < Real.exp (-(139 / 5 : ℝ) * (n : ℝ) ^ 2) := by
-  sorry
+  filter_upwards [QKM_decay, eventually_ge_atTop 200000] with n hdecay hn
+  obtain ⟨q, hq⟩ := QKM_mem_int (n := n) (M := 200) (by norm_num) (by simp only [K]; omega)
+  have hval : aeval (riemannZeta 5).re q = aeval (riemannZeta 5).re (Q n 200) := by
+    rw [← hq, ← algebraMap_int_eq, aeval_map_algebraMap]
+  refine ⟨q, ?_, hval ▸ QKM_pos n 200, hval ▸ hdecay⟩
+  have hdeg := QKM_natDegree n 200
+  rw [← hq, natDegree_map_eq_of_injective (RingHom.injective_int _)] at hdeg
+  simp [hdeg, dim]
 
 end Zeta5
 

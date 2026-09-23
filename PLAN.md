@@ -1,8 +1,8 @@
 # PLAN — `irrational_zeta_five`의 `sorry`를 없애기 위한 로드맵
 
 기준 문서: `ZETA5_IS_IRRATIONAL.pdf` (A. Fauzan, 2026-09-17). 절/식 번호는 이 논문을 따른다.
-현재 상태(2026-09-23): §1.1 환원은 증명 완료. 남은 `sorry`는 `Zeta5.exists_smallIntPolys_zeta5`
-하나이며, 이는 논문 Theorem 2.1의 귀결이다.
+현재 상태(2026-09-23): §1.1 환원과 Phase 0, 1 완료. 남은 `sorry`는 `Zeta5/Theorem21.lean`의
+네 명제(Theorem 2.1의 네 부분)이다.
 
 ## 0. 원칙
 
@@ -88,25 +88,33 @@
 성립하지 않는다. 사용자에게 보고하고 진행 여부를 묻는다. → 해당 없음. 남은 한계는 Prop 4.1을 논문의
 실제 가정(`p > 200M`, `K ≥ 200M²`) 아래에서는 검사할 수 없었다는 점이다.
 
-## 3. Phase 1 — 정의 (`Zeta5/Defs.lean`)
+## 3. Phase 1 — 정의 (`Zeta5/Defs.lean`) (완료, 2026-09-23)
 
-논문 §2.1, §2.2, §5의 대상을 Lean 정의로 옮긴다. 증명은 없고 정의만 두므로 빠르지만, 여기서 틀리면
-전부 무효이므로 Phase 0의 스크립트와 작은 `K`에서 값을 대조한다(`#eval`은 불가하므로 `norm_num`
-또는 `decide`로 `K = 40` 한 경우를 검사하는 테스트 파일을 둔다).
+논문 §2.1, §2.2, §4, §5의 대상을 Lean 정의로 옮겼다. 증명은 기초적인 것(단항성, 차수, 양수성)만 두었다.
 
-- [ ] 상수: `K = 40n`, `N = 3n`, `h = 37n`, `α, λ, H` (2.1).
-- [ ] `D m : ℚ[X] := ∏ (X + j²)`, `H5 j := ∑ v⁻⁵`.
-- [ ] 범함수 `μ`: 다항식 부분은 (2.2) `(-1)^e B_{2e+2}(2e+3)(2e+4)(2e+5)/24` (Mathlib `bernoulli` 사용,
-      `B₁ = -1/2` 규약은 짝수 첨자만 쓰므로 무관). 극 부분은 (2.3), 값은 `ℚ[X]` (변수 `X`).
-- [ ] 일반 유리함수 대신 **필요한 항만** 정의한다: `R_{ij} = D_N⁶ t^{i+j} / D_K`에 대해
-      `P := (D_N⁶ t^{i+j}) /ₘ D_K` (Mathlib `Polynomial.divByMonic`), 잔차
-      `c_j := (D_N⁶ (-j²)^{i+j}) / D_K'(-j²)`, 그리고 `μ_X(R) := μ(P) + ∑_j c_j μ_X(1/(t+j²))`.
-      이는 Prop 2.2에서 적분 표현과 일치함을 별도로 증명해야 한다(Phase 3).
-- [ ] `G K : Matrix (Fin h) (Fin h) ℚ[X]`, `Δ K := det (G K)`, `S K` (2.5), `F K := S K • Δ K`.
-- [ ] `γ_in p`, `γ_out p` (4.8), (4.14): 논문의 조합적 정의를 그대로 옮긴다(`ℓ_A(a)`, `m_A`, `T, E`,
-      `ε_a`, `L_a`, `w_{a,i}`; `r_p`, `t_p`, `u`). 정수임을 증명하는 보조정리 포함.
-- [ ] `L p K M` (5.1), `m K M := ∏_{p ≤ 2h, p prime} p^{-L_p}` (5.2), `Q K M := m K M • F K`.
-- [ ] `exists_smallIntPolys_zeta5`를 §1의 네 명제로부터 유도하도록 `Main.lean`을 갱신한다.
+- [x] 상수: `K n = 40n`, `N n = 3n`, `dim n = 37n` (논문의 `h`; 가설 이름과 겹치지 않게 바꿈),
+      `alpha`, `lambda`, `bigH` (2.1). `N = αK`, `h = λK`, `H = 23/20` 보조정리 포함.
+- [x] `poleDen S = ∏_{j∈S} (t + j²)`, `D m = poleDen (Icc 1 m)`, `H5 j`.
+- [x] 범함수: `muMon e` (2.2), `mu : ℚ[X] →ₗ[ℚ] ℚ` (`Polynomial.lsum`), `muPole j` (2.3, `X`에 대한 1차식).
+- [x] 유리함수는 (분자 `A`, 극 집합 `S`)로 표현하고 `muX A S := C (mu (A /ₘ poleDen S)) +
+      ∑_{j∈S} C (residue A S j) * muPole j`, `residue A S j = A(-j²) / poleDen'(-j²)`. 계획과 달리
+      분모를 `D_N⁶`로 약분하지 않고 `D_K` 그대로 쓴다(`j ≤ N`의 잔차는 0). Prop 2.2의 적분 표현과
+      일치함은 Phase 3에서 증명한다.
+- [x] `G n : Matrix (Fin (dim n)) (Fin (dim n)) ℚ[X]` (2.4), `Δ n := det (G n)`, `S n` (2.5),
+      `F n := C (S n) * Δ n`.
+- [x] `Inner.gammaIn p n M` (4.4)~(4.8): `ell`, `L0`, `b`, `T`, `E`, `rank`, `eps`, `L`, `Z`, `w`, `w0`를
+      각각 정의했다. 동률은 `a`의 순서로 깬다(논문은 임의). 반정수 가중치의 두 배를 정수로 합산하고,
+      논문 형태와의 관계는 `Inner.gammaIn_eq`, `zeroCap2_eq`로 증명했다.
+      `Outer.gammaOut p n` (4.14)는 `p > K`이면 0이다.
+- [x] `Lexp p n M` (5.1, `v_p(S_K)`는 `padicValRat`), `normFactor n M` (5.2), `Q n M := C (normFactor n M) * F n`.
+- [x] `Zeta5/Theorem21.lean`에 Theorem 2.1을 네 명제(`QKM_mem_int`, `QKM_natDegree`, `QKM_pos`,
+      `QKM_decay`)로 나눠 `sorry`로 두고, `Main.lean`의 `exists_smallIntPolys_zeta5`는 이 네 명제로부터
+      증명했다(`n ≥ 200000`이면 `K ≥ 200·200²`).
+- [x] 테스트(`Zeta5Test/Defs.lean`, `lake test`): `K = 40`의 `G`, `Δ` 전체를 `norm_num`으로 대조하는 것은
+      비현실적이다(37×37 행렬, 계수가 수천 자리). 대신 Phase 0 스크립트의 값과 다음을 증명으로 대조한다.
+      `μ(1), μ(t), μ(t²)`, `H5 2`, `μ_X(1/(t+1))`, `μ_X(t/(t+1))`(잔차 부호), `μ_X(t³/((t+1)(t+4)))`
+      (극 두 개, 1차 몫), `ℓ`, K ≤ 120의 `γ_out` 10개, `γ_in` 7개(`decide`). 틀린 값을 넣으면 `decide`가
+      실패함도 확인했다. `padicValRat`는 커널에서 계산되지 않아 `v_p(S_K)`는 테스트하지 못했다.
 
 ## 4. Phase 2 — 차수 (§2.3)
 
@@ -205,7 +213,8 @@ Phase 5와 독립. 가장 "수학적으로 정직한" 부분이며 논문이 틀
 
 ```
 Zeta5/Main.lean        -- 최종 정리와 §1.1 환원 (완료)
-Zeta5/Defs.lean        -- Phase 1
+Zeta5/Defs.lean        -- Phase 1 (완료)
+Zeta5/Theorem21.lean   -- Theorem 2.1의 네 명제. Phase 7에서 각 Phase의 결과를 모은다
 Zeta5/Degree.lean      -- Phase 2
 Zeta5/Moment.lean      -- Phase 3: w, 모멘트, Hermite 공식, 양정치
 Zeta5/Andreief.lean    -- Phase 4
@@ -220,6 +229,7 @@ Zeta5/Outer.lean       -- Phase 5: Prop 4.3
 Zeta5/Integrality.lean -- Phase 5: Prop 5.1
 Zeta5/PrimeSum.lean    -- Phase 6
 Zeta5/Constants.lean   -- Phase 6, 7: 부록 B 유리수 상수
+Zeta5Test/            -- 정의의 작은 경우 테스트 (`lake test`)
 scripts/               -- Phase 0 수치 검증
 ```
 
@@ -235,9 +245,9 @@ scripts/               -- Phase 0 수치 검증
 | Lean 이름 | Phase | 상태 |
 |---|---|---|
 | `Zeta5.irrational_of_smallIntPolys` | — | 완료 |
-| `Zeta5.exists_smallIntPolys_zeta5` | 7 | `sorry` (네 명제로 분해 예정) |
-| `QKM_natDegree` | 2 | 미착수 |
-| `QKM_pos` | 3 | 미착수 |
+| `Zeta5.exists_smallIntPolys_zeta5` | 1 | 완료 (아래 네 명제로부터) |
+| `QKM_natDegree` | 2 | `sorry` (`Theorem21.lean`) |
+| `QKM_pos` | 3 | `sorry` (`Theorem21.lean`) |
 | `hermite_integral_five` | 3 | 미착수 |
 | `andreief` | 4 | 미착수 |
 | `logEnergy_nonpos_of_zero_mass` | 4 | 미착수 |
@@ -248,10 +258,10 @@ scripts/               -- Phase 0 수치 검증
 | `inner_range_41` | 5 | 미착수 (Phase 0 검증 선행) |
 | `det_rank_42` | 5 | 미착수 |
 | `outer_range_43` | 5 | 미착수 |
-| `QKM_mem_int` | 5 | 미착수 |
+| `QKM_mem_int` | 5 | `sorry` (`Theorem21.lean`) |
 | `prime_sum_52` | 6 | 미착수 (소수정리 의존성 결정 선행) |
 | `normalization_growth_521` | 6 | 미착수 |
-| `QKM_decay` | 7 | 미착수 |
+| `QKM_decay` | 7 | `sorry` (`Theorem21.lean`) |
 
 ## 13. 리스크
 

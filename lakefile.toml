@@ -3,6 +3,7 @@ version = "0.1.0"
 license = "(Apache-2.0 OR MIT)"
 keywords = ["math"]
 defaultTargets = ["Zeta5"]
+testDriver = "Zeta5Test"
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -18,3 +19,6 @@ rev = "v4.34.0"
 
 [[lean_lib]]
 name = "Zeta5"
+
+[[lean_lib]]
+name = "Zeta5Test"
