@@ -1,8 +1,8 @@
 # PLAN — `irrational_zeta_five`의 `sorry`를 없애기 위한 로드맵
 
 기준 문서: `ZETA5_IS_IRRATIONAL.pdf` (A. Fauzan, 2026-09-17). 절/식 번호는 이 논문을 따른다.
-현재 상태(2026-09-24): §1.1 환원과 Phase 0, 1, 2 완료. 남은 `sorry`는 `Zeta5/Theorem21.lean`의
-세 명제 `QKM_mem_int`, `QKM_pos`, `QKM_decay`이다.
+현재 상태(2026-09-24): §1.1 환원과 Phase 0~3 완료. 남은 `sorry`는 `Zeta5/Theorem21.lean`의
+두 명제 `QKM_mem_int`(Phase 5), `QKM_decay`(Phase 4, 6, 7)이다.
 
 ## 0. 원칙
 
@@ -128,23 +128,30 @@
 - 계획과 달리 (2.9)의 선행계수 값 `(-1)^{h(h-1)/2} ∏ j⁴ D_N(-j²)⁵` 자체는 증명하지 않았다.
   차수에는 `≠ 0`만 필요하다(Phase 0에서 값은 수치로 확인했다). 약 190줄.
 
-## 5. Phase 3 — ζ(5)에서의 양성 (§2.4, Prop 2.2)
+## 5. Phase 3 — ζ(5)에서의 양성 (§2.4, Prop 2.2) (완료, 2026-09-24)
 
-- [ ] 가중치 `w(y) := (2π)⁴ y⁵/12 ∑ ℓ⁴ e^{-2πℓy}`의 적분가능성.
-- [ ] 모멘트 공식 `∫ y^{2e} w = μ(t^e)`: `∫ y^{2e+5} e^{-2πℓy} = (2e+5)!/(2πℓ)^{2e+6}`
-      (Mathlib Gamma 적분 `Real.Gamma_eq_integral` 계열) + Euler 공식
-      `riemannZeta_two_mul_nat` (Mathlib에 있음) + 급수·적분 교환(`integral_tsum`).
-- [ ] 극 공식 `∫ w/(y²+a²) = a⁴ ζ(5,a) − 1/(2a) − 1/4`: 논문은 Hermite 적분공식(DLMF 25.11.29)을
-      쓰는데 **Mathlib에 없다.** 두 가지 경로 중 택일.
-      (a) Hermite 공식을 `a > 0`, `s = 5`에 대해서만 증명. 4번 부분적분 + `f(y) = 1/(e^{2πy}-1)` 전개.
-      (b) 직접: `1/(y²+a²)`를 쓰지 말고 `w(y)/(y²+a²)`를 `∑_ℓ ℓ⁴ ∫ y⁵ e^{-2πℓy}/(y²+a²)`로 두고
-      Laplace 변환 표현으로 `H⁽⁵⁾_j`가 나오는지 확인. (a)가 논문과 일치하므로 (a) 권장.
-      Hurwitz zeta 값은 `a = j`가 정수일 때만 필요하므로 `ζ(5,j) = ζ(5) − H⁽⁵⁾_{j-1}`만 있으면 되고,
-      이는 `hasSum_hurwitzZeta_of_one_lt_re`에서 나온다.
-- [ ] 선형성: Phase 1의 `μ_X(R_{ij})` 정의(몫 + 잔차)가 `∫ R_{ij}(y²) w`와 같음.
-- [ ] `G_K(ζ(5))`가 Gram 행렬이므로 양정치(`Matrix.PosDef`), 따라서 `det > 0`
-      (`Matrix.PosDef.det_pos`). `S_K > 0`, `m_{K,M} > 0`이므로 `Q_{K,M}(ζ(5)) > 0`.
-- 규모: 중간(1~2천 줄). 실해석 적분 조작이 대부분이다.
+`QKM_pos`의 `sorry`를 제거했다(표준 공리만 사용). 약 1400줄, 네 파일.
+
+- [x] `Zeta5/Weight.lean`: 가중치 `wt`(급수로 정의), 양수성, 합가능성, 적분가능성
+      (모멘트 적분값이 양수라는 것에서 `Integrable.of_integral_ne_zero`로 얻는다).
+      모멘트 공식 `integral_pow_mul_wt : ∫ y^{2e} w = μ(t^e)`는 Gamma 적분
+      `integral_rpow_mul_exp_neg_mul_Ioi`와 Euler 공식 `hasSum_zeta_nat`으로 증명했다.
+- [x] 극 공식 `integral_wt_div_sq_add_sq : ∫ w/(y²+j²) = j⁴(ζ(5) − H_j⁽⁵⁾) − 1/4 + 1/(2j)`.
+      **Hermite 적분공식 없이** 증명했다(`Zeta5/Hermite.lean`, `Zeta5/PoleIntegrals.lean`).
+      1. `g = y⁵/(y²+a²)`에 대해 ℓ별로 4번 부분적분하면 `∫ c⁴e^{−cy} g = 24a⁴ ∫ e^{−cy} r₅`이다.
+         여기서 `r₅ = Re((y−ia)⁻⁵)`이고, 경계항은 `g,…,g‴(0) = 0`이라 사라진다.
+         ℓ에 대해 합하면 `∫ w/(y²+a²) = 2a⁴ ∫ f r₅`, `f = 1/(e^{2πy}−1)`이다.
+      2. Mathlib `cot_series_rep'`와 `Complex.cot_pi_eq_exp_ratio`를 `iy`에 적용해
+         `f = −1/2 + 1/(2πy) + (1/π)∑_{k≥1} y/(y²+k²)`를 얻는다.
+      3. 세 유리함수 적분 `∫r₅ = 1/(4a⁴)`, `∫r₅/y = π/(2a⁵)`,
+         `∫ y/(y²+k²) r₅ = π/(2(a+k)⁵)`은 명시적 원시함수로 계산했다. 원시함수는 computer algebra로
+         찾았고 Lean에서는 미분해서 검증한다(`a = k`는 별도 원시함수). 결과는 실수 `a > 0` 전체에 대한
+         `∫ w/(y²+a²) = a⁴ζ(5,a) − 1/(2a) − 1/4`이다.
+- [x] `Zeta5/Gram.lean`: 부분분수(`modByMonic_poleDen`, Lagrange 유일성)로
+      `aeval ζ(5) (muX A S) = ∫ A(y²)/∏(y²+j²) · w`를 증명했다(Prop 2.2). `G_K(ζ(5))`는 가중치
+      `D_N(y²)⁶/D_K(y²)·w`에 대한 `1, y², …`의 Gram 행렬이므로 `Matrix.PosDef`이고, `det_pos`로
+      `Δ_K(ζ(5)) > 0`을 얻는다. 양정치성은 이차형식의 피적분함수가 유한개 근을 제외한 `(0,∞)`에서
+      양수라는 것으로 보였다.
 
 ## 6. Phase 4 — 실수 감쇠 (§6, 부록 A) → Prop 6.3
 
@@ -222,7 +229,10 @@ Zeta5/Main.lean        -- 최종 정리와 §1.1 환원 (완료)
 Zeta5/Defs.lean        -- Phase 1 (완료)
 Zeta5/Theorem21.lean   -- Theorem 2.1의 네 명제. Phase 7에서 각 Phase의 결과를 모은다
 Zeta5/Degree.lean      -- Phase 2 (완료)
-Zeta5/Moment.lean      -- Phase 3: w, 모멘트, Hermite 공식, 양정치
+Zeta5/Weight.lean      -- Phase 3: w와 모멘트 (완료)
+Zeta5/PoleIntegrals.lean -- Phase 3: 극 공식의 유리함수 적분 (완료)
+Zeta5/Hermite.lean     -- Phase 3: 극 공식 (완료)
+Zeta5/Gram.lean        -- Phase 3: 부분분수, Gram 양정치성 (완료)
 Zeta5/Andreief.lean    -- Phase 4
 Zeta5/LogEnergy.lean   -- Phase 4: Lemma 6.2, arcsine 퍼텐셜
 Zeta5/Potential.lean   -- Phase 4: 부록 A 표 1, 표 2 검증
@@ -253,8 +263,8 @@ scripts/               -- Phase 0 수치 검증
 | `Zeta5.irrational_of_smallIntPolys` | — | 완료 |
 | `Zeta5.exists_smallIntPolys_zeta5` | 1 | 완료 (아래 네 명제로부터) |
 | `QKM_natDegree` | 2 | 완료 (`Degree.lean`의 `natDegree_Q`) |
-| `QKM_pos` | 3 | `sorry` (`Theorem21.lean`) |
-| `hermite_integral_five` | 3 | 미착수 |
+| `QKM_pos` | 3 | 완료 (`Gram.lean`의 `aeval_Q_pos`) |
+| `integral_wt_div_sq_add_sq` (극 공식) | 3 | 완료 (Hermite 공식 없이) |
 | `andreief` | 4 | 미착수 |
 | `logEnergy_nonpos_of_zero_mass` | 4 | 미착수 |
 | `potential_bound_A9` | 4 | 미착수 |
