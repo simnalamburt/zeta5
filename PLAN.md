@@ -1,9 +1,9 @@
 # PLAN — `irrational_zeta_five`의 `sorry`를 없애기 위한 로드맵
 
 기준 문서: `ZETA5_IS_IRRATIONAL.pdf` (A. Fauzan, 2026-09-17). 절/식 번호는 이 논문을 따른다.
-현재 상태(2026-09-24): §1.1 환원과 Phase 0~5 완료. `QKM_decay`는 `realBound`(Phase 4, 완료)와
-`normFactor_growth`(Phase 6)로부터, `QKM_mem_int`는 Prop 5.1(Phase 5, 완료)로부터 증명되었다.
-남은 `sorry`는 `normFactor_growth`(Phase 6) 하나다(§12).
+현재 상태(2026-09-24): Phase 0~7 완료. `sorry`는 없고, `#print axioms irrational_zeta_five`는
+`[propext, Classical.choice, Quot.sound]`만 보인다(`sorryAx`, `Lean.ofReduceBool` 없음). 논문과 다르게
+증명한 부분은 각 Phase 절에 적었다(Phase 5는 §7, Phase 6은 §8).
 
 ## 0. 원칙
 
@@ -249,28 +249,64 @@ Prop 6.3은 **점근형**으로 증명한다: 모든 `ε > 0`에 대해 결국 `
 - [x] Prop 5.1: `Integrality.lean`. `p ≤ 2h`에서는 (5.1)의 경우별로, `p > 2h`에서는 `S_K`가 단원.
 - 규모: 새 파일 22개, 약 5.7천 줄.
 
-## 8. Phase 6 — 소수 합 (§5.1–5.3, 부록 B) → (5.21)
+## 8. Phase 6 — 소수 합 (§5.1–5.3, 부록 B) → (5.21) (완료, 2026-09-24)
 
-- [x] **소수정리 점근형**: Mathlib에는 Chebyshev 함수 `θ, ψ`와 유계만 있고 `θ(x) ~ x`는 없다.
-      0.2% 마진 때문에 Chebyshev 상수로는 대체 불가. 그래서 `PrimeNumberTheoremAnd`를 의존성으로
-      추가했다(2026-09-24, 커밋 `747e480`; Mathlib 핀을 그에 맞춰 v4.32.2로 내림).
-      `chebyshev_asymptotic : θ ~[atTop] id`를 쓰고, 이것은 표준 공리만 쓴다(`Wiener.lean`의 sorry
-      두 개는 이 경로에 없다). 필요한 형태 `∑_{K/M<p≤K/3} p f(K/p) log p / K² → ∫ f(x)/x³ dx`는
-      부분합으로 직접 유도한다.
-- [ ] (5.7): `γ_p^in = p Γ(K/p) + O_M(1)`. 논문은 스케치만 있고 `O_M(1)` 균일성이 핵심이다.
-      명시적 상수로 다시 써야 한다(Phase 0에서 수치로 상수 추정).
-- [ ] 외부 범위 (5.8)~(5.10), `I_out = 127751/96000`: 부록 B 표 4의 조각별 적분(`norm_num`).
-- [ ] 내부 적분 (5.18): 143개 구간에서 `R`이 1차식임을 보이고 적분(`norm_num`).
-- [ ] 꼬리 (5.15)~(5.17): 부분적분과 주기함수 `P, C`의 유계.
-- [ ] Prop 5.2, (5.21) `limsup K⁻² log m_{K,M} ≤ A_M`.
-- 규모: 큼. 소수정리 의존성이 결정되기 전까지는 (5.7) 이하 부등식 부분만 진행한다.
+`normFactor_growth`: 모든 `ε > 0`에 대해 결국 `log m_{K,200} ≤ (A_200 + ε) K²` (`Zeta5/PrimeSum.lean`).
+`log m_{K,M} = ∑_{p ≤ 2h} (−L_p) log p`를 `x = K/p`로 세 범위로 나눈다.
 
-## 9. Phase 7 — 결합 (§7)
+- [x] **소수정리**: `PrimeNumberTheoremAnd`를 의존성으로 추가했다(2026-09-24, 커밋 `747e480`;
+      Mathlib 핀을 그에 맞춰 v4.32.2로 내림). 이유는 Mathlib에 `θ, ψ`와 Chebyshev 유계만 있고
+      `θ(x) ~ x`가 없기 때문이며, 0.2% 마진이라 Chebyshev 상수로는 대신할 수 없다.
+      `chebyshev_asymptotic : θ ~ id`와 `WeakPNT'' : ψ ~ id`를 쓴다. 둘 다 표준 공리만 쓰고,
+      `Wiener.lean`의 sorry 두 개는 이 경로에 없다.
+      - `∑_{p ≤ x} p log p ~ x²/2`는 이산 부분합 `∑_{p≤N} p log p = Nθ(N) − ∑_{n<N} θ(n)`과
+        `IsLittleO.sum_range`로 얻는다.
+      - 여기서 `K⁻² ∑_{l ≤ K/p < r} (AK + Bp) log p → ∫_l^r (Ax+B) x⁻³ dx`가 나온다
+        (`Zeta5/PrimeAsymp.lean`).
+- [x] **작은 소수** (5.3), `p ≤ K/M`:
+      - `−L_p = 6h⌊log_p 5K⌋ + h v_p(24)`이다.
+      - 논문처럼 `p ≤ √(5K)`를 따로 세지 않는다. 대신 `∑_{p≤K/M} ⌊log_p 5K⌋ log p ≤ θ(K/M) + ψ(5K) − θ(5K)`를 쓰고,
+        `ψ ~ θ ~ x`에서 `ψ(5K) − θ(5K) = o(K)`가 나온다.
+- [x] **`v_p(S_K)`** (`Zeta5/ValS.lean`): `p² > 2h`인 홀수 소수에서 `v_p(S_K) ≥ p N(K/p)`가 오차 없이
+      성립한다. `∑_{i<h} ⌊2i/p⌋ ≤ p J(h/p)`를 `h`에 대한 귀납으로 보인다.
+- [x] **내부 범위 (5.7)** (`Zeta5/InnerBound.lean`, `Inner.neg_Lexp_le`):
+      `−L_p ≤ p R(K/p) + 1000(M+1)²`.
+      - **논문과 다름.** 논문은 배분 (4.4)의 연속 극한을 스케치만 한다. 우리는 라그랑주 하한을 쓴다.
+        클래스 `a`의 행들은 `L_a(L_a + c_a)`를 기여하고(`c_a = 6ℓ_N(a) − ℓ_K(a) − 5`),
+        모든 정수 `μ`에 대해 `L(L+c) ≥ μL − ⌊(c−μ)²/4⌋`이다.
+      - 따라서 필요한 것은 `∑_a L_a = h − L₀`와 `L_a ≥ 0`(둘 다 Phase 5에 있음)뿐이다.
+        rank, `E`, `ε_a`의 분석은 필요 없다.
+      - `ℓ_A(a) = 2⌊A/p⌋ + [a ≤ A mod p] + [p ≤ A mod p + a]`를 정확히 증명했다. 그러면 클래스 합은
+        두 문턱값의 함수가 되고, `p ∫_0^{1/2} … dz`와 `O(1)` 차이다.
+      - `μ = 2⌊2Hx⌋ − ⌊2x⌋ − 5 + [{2x} < {2Hx}]`로 두면 이 하한은 논문의 `Γ` (5.4)와 정확히 같다
+        (`scripts/gen_rdata.py`가 15109개 유리수 점에서 확인).
+- [x] **외부 범위** (5.8)~(5.10) (`Zeta5/OuterBound.lean`, `Outer.neg_Lexp_le`):
+      - `K/3 < p`에서 `−L_p ≤ p R(K/p) + 3`이다.
+      - `R(x) = x T_out(1/x)`이며, 여기서 `T_out`은 (5.10)의 피적분함수다.
+- [x] **`R`의 정확한 적분** (`Zeta5/AffineEx.lean`, `RFun.lean`, `RData.lean`, `RCheck.lean`):
+      - `R`을 한 변수 식(`Ex`: 1차 연산, 곱, floor, min, max, 비교)으로 적었다.
+      - 구간 `(l, r)`에서 식을 1차식으로 평가하는 검사기와 건전성 정리(`Ex.aff_sound`)를 만들었다.
+        검사기는 모든 floor/min/max/비교가 그 구간에서 일정해야 성공한다.
+      - `[20/37, 200]`의 1896개 구간(부록 B (B.2)를 외부 범위로 넓힌 분할점)을 `decide +kernel`로 검사했다.
+        10개 청크로 나누어 약 110초가 걸린다.
+      - 각 청크의 정확한 적분은 `10⁻¹⁵` 단위로 올림한 상한 이하임도 kernel이 확인한다.
+- [x] **논문과 다름: `M = 200`만.** 논문은 (5.21)을 `40 ∣ M`인 모든 `M`에 대해, 꼬리 (5.15)~(5.17)의
+      부분적분으로 증명한다. 우리는 Theorem 2.1에 필요한 `M = 200`만 다룬다. 꼬리 추정 대신
+      `∫_3^{200} R x⁻³`를 정확히 적분한다.
+      - `I_out + 6λ/200 + ∫_3^{200} R x⁻³ = 1.345515`이다. `A_200 = 1.349588`보다 0.004 작다.
+        즉 논문의 꼬리 추정이 0.004를 잃는다.
+      - `I_out = 127751/96000`, (5.18)은 스크립트에서 부분합으로 재현된다. Lean은 전체 상한
+        `∫_{20/37}^{200} R x⁻³ ≤ A_200 − 6λ/200`만 확인한다(`rBounds_sum`).
+- 규모: 새 파일 10개, 약 2.5천 줄. 해석 부분(`PrimeAsymp.lean`, `RIntegral.lean`)은 산술 부분과
+  병렬로 작업했다.
 
-- [ ] (7.1): Prop 6.3 + (5.21) → `limsup K⁻² log Q_{K,M}(ζ(5)) ≤ A_M + U`.
-- [ ] (7.2) `−1600(A_200 + U) > 139/5`: 유리수 산술, `norm_num`. 2026-09-23에 Python으로 재현 완료.
-- [ ] `limsup` 형태를 `∀ᶠ n, Q_{40n,200}(ζ(5)) < exp(−139n²/5)`로 변환.
-- [ ] `exists_smallIntPolys_zeta5`의 `sorry` 제거 → `#print axioms irrational_zeta_five` 확인.
+## 9. Phase 7 — 결합 (§7) (완료, 2026-09-24)
+
+- [x] (7.1): Prop 6.3 + (5.21) → `log Q_{K,200}(ζ(5)) ≤ (A_200 + Ū + ε) K²` (`Theorem21.QKM_decay`).
+- [x] (7.2) `−1600(A_200 + Ū) > 139/5`: `Constants.margin_72_pos` (`norm_num`).
+- [x] `∀ᶠ n, Q_{40n,200}(ζ(5)) < exp(−139n²/5)`로 변환 (`QKM_decay`).
+- [x] `exists_smallIntPolys_zeta5`의 `sorry` 제거. `#print axioms irrational_zeta_five`
+      = `[propext, Classical.choice, Quot.sound]` (2026-09-24).
 
 ## 10. 파일 구성(안)
 
@@ -319,7 +355,16 @@ Zeta5/OuterEntry.lean  -- Phase 5: τ_low, τ_high, 극별 경계, 나눗셈 차
 Zeta5/OuterRange.lean  -- Phase 5: Prop 4.3 (완료)
 Zeta5/LocalBounds.lean -- Phase 5: 네 국소 하한 (완료)
 Zeta5/Integrality.lean -- Phase 5: Prop 5.1 (완료)
-Zeta5/PrimeSum.lean    -- Phase 6: normFactor_growth (5.21)
+Zeta5/PrimeAsymp.lean  -- Phase 6: 소수정리에서 소수 합의 극한 (완료)
+Zeta5/ValS.lean        -- Phase 6: v_p(S_K) ≥ p N(K/p) (완료)
+Zeta5/InnerBound.lean  -- Phase 6: 내부 범위 (5.7), 라그랑주 하한 (완료)
+Zeta5/OuterBound.lean  -- Phase 6: 외부 범위 (5.8)~(5.10) (완료)
+Zeta5/AffineEx.lean    -- Phase 6: 조각별 1차식 검사기 (완료)
+Zeta5/RFun.lean        -- Phase 6: 극한 지수 R(x) (완료)
+Zeta5/RIntegral.lean   -- Phase 6: 조각별 1차식의 소수 합 (완료)
+Zeta5/RData.lean       -- Phase 6: R의 분할점 (생성됨)
+Zeta5/RCheck.lean      -- Phase 6: ∫ R x⁻³의 kernel 검사 (완료)
+Zeta5/PrimeSum.lean    -- Phase 6: normFactor_growth (5.21) (완료)
 Zeta5/Constants.lean   -- 부록 B 유리수 상수 (Ū, A_M, (7.2)의 여유) (완료)
 Zeta5Test/            -- 정의의 작은 경우 테스트 (`lake test`)
 scripts/               -- Phase 0 수치 검증
@@ -331,7 +376,8 @@ scripts/               -- Phase 0 수치 검증
   Bernoulli 곱셈 정리 중 어느 것도 없음(2026-09-23 확인). Mathlib `master`를 고정하므로 추가하면
   이 프로젝트의 핀도 올려야 한다. 현재는 추가하지 않는다. Phase 6에서 핀을 올리게 되면 재검토.
 - **PrimeNumberTheoremAnd** (https://github.com/AlexKontorovich/PrimeNumberTheoremAnd): 의존성으로
-  추가함(커밋 `747e480`, Mathlib v4.32.2). `chebyshev_asymptotic`만 쓴다. 딸려 오는 의존성:
+  추가함(커밋 `747e480`, Mathlib v4.32.2). `chebyshev_asymptotic`(θ)과 `WeakPNT''`(ψ)만 쓴다.
+  딸려 오는 의존성:
   LeanArchitect, checkdecls, leancert, PrimeCert.
 
 ## 12. `sorry` 인벤토리 (진행 상황 추적)
@@ -357,13 +403,13 @@ scripts/               -- Phase 0 수치 검증
 | `outer_bound` (Prop 4.3) | 5 | 완료 (`OuterRange.lean`) |
 | `big_bound` (`p > K`) | 5 | 완료 (`BigPrimes.lean`) |
 | `QKM_mem_int` (Prop 5.1) | 5 | 완료 (`Integrality.lean`의 `QKM_integral`, 표준 공리만) |
-| `normFactor_growth` (5.21) | 6 | `sorry` (`PrimeSum.lean`, 소수정리 의존성 결정 선행) |
+| `normFactor_growth` (5.21) | 6 | 완료 (`M = 200`, `decide +kernel` 1896구간, 표준 공리만) |
 
 ## 13. 리스크
 
 1. **논문 자체의 오류** (특히 (5.7)의 균일성). Phase 0에서는 반례를 찾지 못했다(§2).
    Prop 4.1을 포함한 §3~§5.1은 Phase 5에서 형식화되었으므로 더 이상 리스크가 아니다.
-2. **소수정리 부재.** Mathlib 핀 상향과 외부 의존성 필요. 사용자 결정 사항.
+2. **소수정리 부재.** (해결) PrimeNumberTheoremAnd를 의존성으로 추가했다(§11).
 3. **수치 검증의 규모.** (해결) 표 2의 684개 구간은 검증된 유리수 구간 검사기를 `decide +kernel`로
    실행해 약 280초, 최대 12.5GB 메모리로 검사된다. CI 메모리가 부족하면 청크를 더 잘게 나누면 된다.
 4. **Tate 대수·연속 확장.** (해결) 내부 범위를 값 경계로 증명해 필요 없어졌다.

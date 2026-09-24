@@ -63,7 +63,7 @@ theorem QKM_decay :
     push_cast at h
     linarith
   have hε : 0 < δ / 6400 := by positivity
-  filter_upwards [normFactor_growth (M := 200) (by norm_num) (by norm_num) hε, realBound hε,
+  filter_upwards [normFactor_growth hε, realBound hε,
     eventually_ge_atTop 1] with n hm hF hn
   have hmpos : (0 : ℝ) < normFactor n 200 := by exact_mod_cast normFactor_pos n 200
   have hQ : aeval (riemannZeta 5).re (Q n 200) =

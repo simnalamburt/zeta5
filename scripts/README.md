@@ -11,6 +11,13 @@ uv run scripts/check_local.py         # Δ_K(X): §3-§4 p-진, §6 실수 (K=40
 uv run scripts/check_prime_sum.py     # 허용 (K, M)에서 m_{K,M}, (5.7), (5.11) (K=320000, ~8초)
 ```
 
+Lean 데이터 생성기(Phase 6). 결과가 틀려도 증명에는 영향이 없다(Lean kernel이 다시 검사한다).
+
+```bash
+uv run scripts/gen_table2.py          # Zeta5/PotentialData.lean: 표 2의 분할점
+uv run scripts/gen_rdata.py           # Zeta5/RData.lean: R(x)의 분할점과 청크별 적분 상한 (~3초)
+```
+
 `zeta5_defs.py`는 §2, §5 대상(μ_X, G_K, Δ_K, S_K, v_p(S_K) 등)의 정확한 유리수 참조 구현이다.
 Phase 1의 Lean 정의를 작은 경우에 대조할 때 이 값을 쓴다.
 
