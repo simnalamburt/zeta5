@@ -25,8 +25,10 @@ name = "Zeta5"
 [[lean_lib]]
 name = "Zeta5Test"
 
-# θ(x) ~ x (the prime number theorem) for Phase 6: `chebyshev_asymptotic`.
+# The prime number theorem for Phase 6: `chebyshev_asymptotic` (θ ~ x) and `WeakPNT''` (ψ ~ x).
+# A fork of upstream 747e480 that deletes the unused theorems with `sorry` from `Wiener.lean`
+# (and their dependents in `IEANTN/CH2/CH2_part1.lean`), so that the build shows no `sorry` warning.
 [[require]]
 name = "PrimeNumberTheoremAnd"
-git = "https://github.com/AlexKontorovich/PrimeNumberTheoremAnd.git"
-rev = "747e480362ef6a0a7341055a84372333d72fa62a"
+git = "https://github.com/simnalamburt/PrimeNumberTheoremAnd.git"
+rev = "ea022db94702f787ae12b441235f6494446a5953"

@@ -258,8 +258,9 @@ Prop 6.3은 **점근형**으로 증명한다: 모든 `ε > 0`에 대해 결국 `
 - [x] **소수정리**: `PrimeNumberTheoremAnd`를 의존성으로 추가했다(2026-09-24, 커밋 `747e480`;
       Mathlib 핀을 그에 맞춰 v4.32.2로 내림). 이유는 Mathlib에 `θ, ψ`와 Chebyshev 유계만 있고
       `θ(x) ~ x`가 없기 때문이며, 0.2% 마진이라 Chebyshev 상수로는 대신할 수 없다.
-      `chebyshev_asymptotic : θ ~ id`와 `WeakPNT'' : ψ ~ id`를 쓴다. 둘 다 표준 공리만 쓰고,
-      `Wiener.lean`의 sorry 두 개는 이 경로에 없다.
+      `chebyshev_asymptotic : θ ~ id`와 `WeakPNT'' : ψ ~ id`를 쓴다. 둘 다 표준 공리만 쓴다.
+      의존성은 포크를 쓴다(§11). 업스트림의 `Wiener.lean`에는 쓰지 않는 sorry 정리 두 개가 있어
+      빌드 경고로 보였기 때문이다.
       - `∑_{p ≤ x} p log p ~ x²/2`는 이산 부분합 `∑_{p≤N} p log p = Nθ(N) − ∑_{n<N} θ(n)`과
         `IsLittleO.sum_range`로 얻는다.
       - 여기서 `K⁻² ∑_{l ≤ K/p < r} (AK + Bp) log p → ∫_l^r (Ax+B) x⁻³ dx`가 나온다
@@ -377,9 +378,16 @@ scripts/               -- Phase 0 수치 검증
   Bernoulli 곱셈 정리 중 어느 것도 없음(2026-09-23 확인). Mathlib `master`를 고정하므로 추가하면
   이 프로젝트의 핀도 올려야 한다. 현재는 추가하지 않는다. Phase 6에서 핀을 올리게 되면 재검토.
 - **PrimeNumberTheoremAnd** (https://github.com/AlexKontorovich/PrimeNumberTheoremAnd): 의존성으로
-  추가함(커밋 `747e480`, Mathlib v4.32.2). `chebyshev_asymptotic`(θ)과 `WeakPNT''`(ψ)만 쓴다.
-  딸려 오는 의존성:
-  LeanArchitect, checkdecls, leancert, PrimeCert.
+  추가함(Mathlib v4.32.2). `chebyshev_asymptotic`(θ)과 `WeakPNT''`(ψ)만 쓴다.
+  딸려 오는 의존성: LeanArchitect, checkdecls, leancert, PrimeCert.
+  - 업스트림 `747e480`의 `Wiener.lean`에는 sorry로 남은 `prelim_decay_2`, `prelim_decay_3`가 있다.
+    이것들은 우리 증명 경로에 없지만(`#print axioms`로 확인), `Consequences`가 `Wiener`를 import해서
+    빌드 경고로 보였다.
+  - 그래서 포크 https://github.com/simnalamburt/PrimeNumberTheoremAnd 의 `ea022db`(2026-09-24)를
+    쓴다. 이 커밋은 `747e480`에서 두 정리와 그에 기대는 선언만 지운다: `Wiener.lean`의
+    `decay_alt`, `IEANTN/CH2/CH2_part1.lean`의 4개.
+  - PNT+의 다른 sorry는 우리가 import하지 않는 파일에 있어 빌드되지 않는다.
+  - 업스트림을 따라 올릴 때는 이 삭제만 다시 적용하면 된다.
 
 ## 12. `sorry` 인벤토리 (진행 상황 추적)
 
