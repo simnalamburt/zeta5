@@ -251,11 +251,12 @@ Prop 6.3은 **점근형**으로 증명한다: 모든 `ε > 0`에 대해 결국 `
 
 ## 8. Phase 6 — 소수 합 (§5.1–5.3, 부록 B) → (5.21)
 
-- [ ] **소수정리 점근형**: Mathlib에는 Chebyshev 함수 `θ, ψ`와 유계만 있고 `θ(x) ~ x`는 없다.
-      0.2% 마진 때문에 Chebyshev 상수로는 대체 불가. 선택지:
-      (a) `PrimeNumberTheoremAnd` 프로젝트를 의존성으로 추가(Mathlib 핀 상향 필요).
-      (b) 필요한 형태 `∑_{K/M<p≤K/3} p f(K/p) log p / K² → ∫ f(x)/x³ dx`만 부분합으로 유도하되
-      `θ(x) = x + o(x)`는 외부에서 가져온다. (a)+(b) 조합이 현실적이다. 이 결정은 사용자 확인 필요.
+- [x] **소수정리 점근형**: Mathlib에는 Chebyshev 함수 `θ, ψ`와 유계만 있고 `θ(x) ~ x`는 없다.
+      0.2% 마진 때문에 Chebyshev 상수로는 대체 불가. 그래서 `PrimeNumberTheoremAnd`를 의존성으로
+      추가했다(2026-09-24, 커밋 `747e480`; Mathlib 핀을 그에 맞춰 v4.32.2로 내림).
+      `chebyshev_asymptotic : θ ~[atTop] id`를 쓰고, 이것은 표준 공리만 쓴다(`Wiener.lean`의 sorry
+      두 개는 이 경로에 없다). 필요한 형태 `∑_{K/M<p≤K/3} p f(K/p) log p / K² → ∫ f(x)/x³ dx`는
+      부분합으로 직접 유도한다.
 - [ ] (5.7): `γ_p^in = p Γ(K/p) + O_M(1)`. 논문은 스케치만 있고 `O_M(1)` 균일성이 핵심이다.
       명시적 상수로 다시 써야 한다(Phase 0에서 수치로 상수 추정).
 - [ ] 외부 범위 (5.8)~(5.10), `I_out = 127751/96000`: 부록 B 표 4의 조각별 적분(`norm_num`).
@@ -329,7 +330,9 @@ scripts/               -- Phase 0 수치 검증
 - **TauCeti** (https://github.com/TauCetiProject/TauCeti): 로그 퍼텐셜, Hankel 행렬식, 소수정리,
   Bernoulli 곱셈 정리 중 어느 것도 없음(2026-09-23 확인). Mathlib `master`를 고정하므로 추가하면
   이 프로젝트의 핀도 올려야 한다. 현재는 추가하지 않는다. Phase 6에서 핀을 올리게 되면 재검토.
-- **PrimeNumberTheoremAnd**: 소수정리 점근형의 유일한 현실적 출처. Phase 6 착수 시 결정.
+- **PrimeNumberTheoremAnd** (https://github.com/AlexKontorovich/PrimeNumberTheoremAnd): 의존성으로
+  추가함(커밋 `747e480`, Mathlib v4.32.2). `chebyshev_asymptotic`만 쓴다. 딸려 오는 의존성:
+  LeanArchitect, checkdecls, leancert, PrimeCert.
 
 ## 12. `sorry` 인벤토리 (진행 상황 추적)
 

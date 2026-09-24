@@ -24,3 +24,9 @@ name = "Zeta5"
 
 [[lean_lib]]
 name = "Zeta5Test"
+
+# θ(x) ~ x (the prime number theorem) for Phase 6: `chebyshev_asymptotic`.
+[[require]]
+name = "PrimeNumberTheoremAnd"
+git = "https://github.com/AlexKontorovich/PrimeNumberTheoremAnd.git"
+rev = "747e480362ef6a0a7341055a84372333d72fa62a"
