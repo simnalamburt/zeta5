@@ -11,8 +11,9 @@
    Lean 작업보다 먼저 수치 검증(Phase 0)으로 가장 취약한 명제를 확인하고, 거기서 깨지면 중단한다.
 2. **항상 빌드가 통과하는 상태를 유지한다.** 각 Phase는 정의 + `sorry`가 붙은 명제로 시작해서
    `sorry`를 하나씩 지운다. `sorry` 개수는 이 문서 §9의 인벤토리로 추적한다.
-3. **공리 검사.** CI에서 `#print axioms irrational_zeta_five`를 찍어 `sorryAx`, `Lean.ofReduceBool`
-   (`native_decide`)이 없어야 완료로 본다. 유리수 구간 계산은 `norm_num`/`decide`로 하고,
+3. **공리 검사.** `#print axioms irrational_zeta_five`에 `sorryAx`, `Lean.ofReduceBool`
+   (`native_decide`)이 없어야 완료로 본다. `Zeta5/Main.lean` 끝의 `#guard_msgs`가 이 출력을
+   `[propext, Classical.choice, Quot.sound]`와 비교하므로, 달라지면 빌드가 실패한다. 유리수 구간 계산은 `norm_num`/`decide`로 하고,
    `native_decide`는 합의 없이 쓰지 않는다.
 4. **논문 순서가 아니라 의존성 순서로 진행한다.** 정의(Phase 1) → 차수·양성(Phase 2, 3) →
    실수 감쇠(Phase 4) → p-진 정수성(Phase 5) → 소수 합(Phase 6) → 결합(Phase 7).

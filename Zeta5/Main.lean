@@ -22,8 +22,10 @@ deduces irrationality by a short integrality argument (§1.1).
   number: if such a sequence of integer polynomials exists at `x`, then `x` is irrational.
 * `Zeta5.exists_smallIntPolys_zeta5` is the existence statement provided by Theorem 2.1 of the
   paper (Sections 2–7 and Appendices A–B), with `Qₙ := Q_{40n,200}` of `Zeta5.Defs`. It is derived
-  from the four parts of Theorem 2.1 stated in `Zeta5.Theorem21`, which are not yet proved.
-* `irrational_zeta_five` combines the two.
+  from the four parts of Theorem 2.1 proved in `Zeta5.Theorem21`.
+* `irrational_zeta_five` combines the two. The `#guard_msgs` check after it makes the build fail
+  unless it depends only on the standard axioms `propext`, `Classical.choice`, `Quot.sound`
+  (no `sorryAx`, no `Lean.ofReduceBool` from `native_decide`).
 -/
 
 open Polynomial Filter
@@ -111,3 +113,7 @@ end Zeta5
 /-- ζ(5) is irrational (Theorem 1.1 of the paper). -/
 theorem irrational_zeta_five : Irrational (riemannZeta 5).re :=
   Zeta5.irrational_of_smallIntPolys _ Zeta5.exists_smallIntPolys_zeta5
+
+/-- info: 'irrational_zeta_five' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms irrational_zeta_five
