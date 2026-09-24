@@ -57,20 +57,24 @@ theorem hasDerivAt_gD {a : ℝ} (ha : a ≠ 0) {m : ℕ} (hm : m < 4) (y : ℝ) 
   have hq := (hasDerivAt_pow 2 y).add_const (a ^ 2)
   interval_cases m
   · convert (hasDerivAt_pow 5 y).div hq hd using 1
+    all_goals try with_reducible_and_instances rfl
     · ext x; simp [gD]
     · simp only [gD]; norm_num; field_simp; ring
   · convert ((hasDerivAt_pow 4 y).mul (((hasDerivAt_pow 2 y).const_mul 3).const_add
       (5 * a ^ 2))).div (hq.pow 2) (pow_ne_zero _ hd) using 1
+    all_goals try with_reducible_and_instances rfl
     · ext x; simp [gD]
     · simp only [gD]; norm_num; field_simp; ring
   · convert (((hasDerivAt_pow 3 y).const_mul 2).mul (((((hasDerivAt_pow 2 y).const_mul
       (9 * a ^ 2)).const_add (10 * a ^ 4)).add ((hasDerivAt_pow 4 y).const_mul 3)))).div
       (hq.pow 3) (pow_ne_zero _ hd) using 1
+    all_goals try with_reducible_and_instances rfl
     · ext x; simp [gD]
     · simp only [gD]; norm_num; field_simp; ring
   · convert (((hasDerivAt_pow 2 y).const_mul 6).mul (((((hasDerivAt_pow 2 y).const_mul
       (5 * a ^ 4)).const_add (10 * a ^ 6)).add ((hasDerivAt_pow 4 y).const_mul (4 * a ^ 2))).add
       (hasDerivAt_pow 6 y))).div (hq.pow 4) (pow_ne_zero _ hd) using 1
+    all_goals try with_reducible_and_instances rfl
     · ext x; simp [gD]
     · simp only [gD, r5]; norm_num; field_simp; ring
 
@@ -202,6 +206,7 @@ theorem integral_exp_mul_eq {c : ℝ} {h h' : ℝ → ℝ} (hd : ∀ y, HasDeriv
     have he : HasDerivAt (fun y => exp (-(c * y))) (exp (-(c * y)) * (-(c * 1))) y :=
       ((hasDerivAt_id y).const_mul c).neg.exp
     convert (he.mul (hd y)).neg using 1
+    all_goals try with_reducible_and_instances rfl
     ring
   have := integral_Ioi_of_hasDerivAt_of_tendsto (hΦ 0).continuousAt.continuousWithinAt
     (fun y _ => hΦ y) ((hi.const_mul c).sub hi') (by simpa using hlim.neg)
@@ -410,6 +415,7 @@ theorem hasSum_div_sq_add_sq {y : ℝ} (hy : 0 < y) :
   have hq := exp_neg_two_pi_lt_one hy
   have hq' : 1 - exp (-(2 * π * y)) ≠ 0 := (sub_pos.2 hq).ne'
   convert h3 using 1
+  all_goals try with_reducible_and_instances rfl
   · ext n
     field_simp
   · rw [fq_eq hy]

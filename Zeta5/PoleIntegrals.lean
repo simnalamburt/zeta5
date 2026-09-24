@@ -93,6 +93,8 @@ theorem hasDerivAt_R4 {a : ℝ} (ha : a ≠ 0) (y : ℝ) : HasDerivAt (R4 a) (r5
     (a ^ 4)).neg
   have h2 := (((hasDerivAt_pow 2 y).add_const (a ^ 2)).pow 4).const_mul 4
   convert h1.div h2 (mul_ne_zero four_ne_zero (pow_ne_zero _ hd)) using 1
+  · rfl
+  · rfl
   · ext x
     simp [R4]
   · simp only [r5, Pi.neg_apply, Pi.sub_apply, Pi.pow_apply]
@@ -178,6 +180,8 @@ theorem hasDerivAt_F1 {a : ℝ} (ha : a ≠ 0) (y : ℝ) : HasDerivAt (F1 a) (q5
   have h2 := (((hasDerivAt_pow 2 y).add_const (a ^ 2)).pow 4).const_mul (3 * a ^ 4)
   have h3 := (hasDerivAt_arctan_div ha y).div_const (a ^ 5)
   convert (h1.div h2 (mul_ne_zero (by positivity) (pow_ne_zero _ hd))).add h3 using 1
+  · rfl
+  · rfl
   · ext x
     simp [F1]
   · simp only [q5, Pi.add_apply, Pi.pow_apply, id]
@@ -257,6 +261,8 @@ theorem hasDerivAt_FK {a k : ℝ} (ha : a ≠ 0) (hk : k ≠ 0) (hak : a ^ 2 - k
   have h4 := (hasDerivAt_arctan_div hk y).const_mul
     (k * (5 * a ^ 4 + 10 * a ^ 2 * k ^ 2 + k ^ 4) / (a ^ 2 - k ^ 2) ^ 5)
   convert ((h1.div h2 (mul_ne_zero (by positivity) (pow_ne_zero _ hd))).add h3).sub h4 using 1
+  · rfl
+  · rfl
   · ext x
     simp [FK, NK]
   · simp only [yk5, r5, Pi.add_apply, Pi.pow_apply, id]
@@ -334,6 +340,8 @@ theorem hasDerivAt_FA {a : ℝ} (ha : a ≠ 0) (y : ℝ) : HasDerivAt (FA a) (yk
   have h2 := (((hasDerivAt_pow 2 y).add_const (a ^ 2)).pow 5).const_mul (480 * a ^ 4)
   have h3 := (hasDerivAt_arctan_div ha y).div_const (32 * a ^ 5)
   convert (h1.div h2 (mul_ne_zero (by positivity) (pow_ne_zero _ hd))).add h3 using 1
+  · rfl
+  · rfl
   · ext x
     simp [FA]
   · simp only [yk5, r5, Pi.add_apply, Pi.pow_apply, id]

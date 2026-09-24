@@ -147,7 +147,7 @@ theorem ae_cnt : ∀ᵐ x ∂cnt Kr t, |x| ≤ ∑ i, |t i| + 2 := by
   have hs : MeasurableSet {a : ℝ | ¬|a| ≤ ∑ i, |t i| + 2} :=
     (measurableSet_le continuous_abs.measurable measurable_const).compl
   rw [Measure.dirac_apply' _ hs, indicator_of_notMem]
-  simp only [mem_ofPred_eq, not_not]
+  simp only [Set.mem_setOf_eq, not_not]
   have := Finset.single_le_sum (f := fun i => |t i|) (fun i _ => abs_nonneg _) (Finset.mem_univ i)
   linarith
 

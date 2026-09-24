@@ -85,7 +85,7 @@ theorem det_gram_change {m : ℕ} (W : ℚ[X]) (S : Finset ℕ) (b : Fin m → �
 /-- The determinant of a triangular change of basis. -/
 theorem det_coeffMat_of_triangular {m : ℕ} (b : Fin m → ℚ[X])
     (hb : ∀ i, (b i).natDegree ≤ i) : (coeffMat b).det = ∏ i : Fin m, (b i).coeff i := by
-  rw [Matrix.det_of_isLowerTriangular]
+  rw [Matrix.det_of_lowerTriangular]
   · rfl
   · intro i j hij
     exact coeff_eq_zero_of_natDegree_lt ((hb i).trans_lt hij)

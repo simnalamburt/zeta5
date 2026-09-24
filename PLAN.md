@@ -17,8 +17,12 @@
 4. **논문 순서가 아니라 의존성 순서로 진행한다.** 정의(Phase 1) → 차수·양성(Phase 2, 3) →
    실수 감쇠(Phase 4) → p-진 정수성(Phase 5) → 소수 합(Phase 6) → 결합(Phase 7).
    Phase 4와 5는 독립이므로 병렬 가능하다.
-5. **Mathlib 우선.** 현재 핀은 Mathlib v4.34.0. 소수정리(§6)를 외부에서 가져와야 할 때만 핀을
-   올린다. TauCeti는 관련 모듈이 없어 현재로선 추가하지 않는다(§8 참조).
+5. **Mathlib 우선.** 현재 핀은 Mathlib v4.32.2(Lean v4.32.2)로, 소수정리를 가져오는
+   PrimeNumberTheoremAnd의 핀에 맞춘 것이다(2026-09-24, v4.34.0에서 내림). 이 버전에 없는 Mathlib
+   보조정리는 `Zeta5/Compat.lean`(같은 이름)과 `Zeta5/Frullani.lean`에 증명해 두었고, 핀을 올릴 때
+   지운다. 구버전 `convert`가 인스턴스 목표를 남기는 곳에는
+   `all_goals try with_reducible_and_instances rfl`을 넣었다. 헤더 린터는 이 버전에서 라이선스 문구를
+   설정할 수 없어 꺼 두었다(`lakefile.toml`). TauCeti는 관련 모듈이 없어 추가하지 않는다(§8 참조).
 
 ## 1. 최상위 분해
 
@@ -170,7 +174,8 @@ Prop 6.3은 **점근형**으로 증명한다: 모든 `ε > 0`에 대해 결국 `
 - [x] **Lemma 6.2** (질량 0 측도의 로그 에너지 ≤ 0): `Zeta5/LogEnergy.lean`.
       논문의 원(반지름 ε) 정규화 대신 **커널 `log((x−y)² + δ²)`로 정규화**했다. 이러면 커널이 받침 위에서
       유계라 극한 논법이 필요 없다. Gaussian 커널의 양정치성(제곱 완성 + Fubini)과 Mathlib의
-      Frullani 적분(`Frullani.integral_Ioi_eq`)으로 증명.
+      Frullani 적분 `∫₀^∞ s⁻¹(e^{-as} − e^{-bs}) ds = log(b/a)`(`Zeta5/Frullani.lean`, Fubini로 직접
+      증명; 처음에는 Mathlib의 `Frullani.integral_Ioi_eq`를 썼으나 v4.32.2에는 없다)으로 증명.
 - [x] arcsine 측도와 퍼텐셜 (A.1): `Zeta5/Arcsine.lean`. arcsine 측도를 `θ ↦ m + R cos θ`에 의한
       균등분포의 상으로 정의하면 적분이 원평균이 된다. Joukowski 인수분해
       `|c − Re z| = |z − w||z − w'|/2` (`w + w' = 2c`, `ww' = 1`)와 Mathlib의

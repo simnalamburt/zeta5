@@ -2,6 +2,7 @@ import Zeta5.Andreief
 import Zeta5.Arcsine
 import Zeta5.BigPrimes
 import Zeta5.Binom
+import Zeta5.Compat
 import Zeta5.Constants
 import Zeta5.Count
 import Zeta5.Defs
@@ -10,6 +11,7 @@ import Zeta5.DetBound
 import Zeta5.Enclose
 import Zeta5.Energy
 import Zeta5.Field
+import Zeta5.Frullani
 import Zeta5.Gram
 import Zeta5.GramBasis
 import Zeta5.Hermite

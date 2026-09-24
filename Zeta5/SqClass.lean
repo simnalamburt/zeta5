@@ -125,7 +125,7 @@ theorem VGe_sq_sub_sq {y : ℤ} {c : ℕ} (hc : (p : ℤ) ∣ y ^ 2 - (c : ℤ) 
     rw [this]
     have := (VGe_p_pow (p := p) 2).mul (VGe_intCast (p := p) (b ^ 2 - a ^ 2))
     push_cast at this ⊢
-    simpa using this
+    simpa [zpow_ofNat] using this
   · exact VGe_of_dvd_int ((dvd_sq_sub_of_class hc x).1 hx)
 
 /-- The poles `s ∈ {±1, …, ±K}` with `s ≡ y` number `κ(c) ℓ_K(c)`. -/

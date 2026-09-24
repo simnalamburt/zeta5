@@ -9,13 +9,15 @@ testDriver = "Zeta5Test"
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
-weak.linter.style.header.license = "Released under Apache 2.0 or MIT license, at your option, as described in the file COPYRIGHT."
+# Mathlib v4.32.2 (the pin of PrimeNumberTheoremAnd) cannot configure the licence line of the header
+# linter (`weak.linter.style.header.license`), so the header linter is off until the pin moves on.
+weak.linter.style.header = false
 maxSynthPendingDepth = 3
 
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.34.0"
+rev = "v4.32.2"
 
 [[lean_lib]]
 name = "Zeta5"

@@ -46,6 +46,7 @@ theorem hasDerivAt_Jprim {s : ℝ} (hs : 0 < s) (u : ℝ) :
   have h2 := ((hasDerivAt_id u).mul (h1.log hpos.ne'))
   have h3 := ((hasDerivAt_id u).div_const s).arctan.const_mul (2 * s)
   convert (h2.sub ((hasDerivAt_id u).const_mul 2)).add h3 using 1
+  all_goals try with_reducible_and_instances rfl
   · funext u; simp only [Pi.add_apply, Pi.sub_apply, Pi.mul_apply, id]
   · simp only [id]
     field_simp
@@ -85,6 +86,7 @@ theorem hasDerivAt_Phi (s : ℝ) : HasDerivAt Phi (2 * Pd s) s := by
     (((hasDerivAt_id s).const_mul 12).mul ((hasDerivAt_id s).div_const (3 / 40)).arctan)).sub_const
     2).add_const (12 * (3 / 40))
   convert h using 1
+  all_goals try with_reducible_and_instances rfl
   · funext s
     simp only [Phi, Pi.add_apply, Pi.sub_apply, Pi.mul_apply, id]
   · simp only [Pd, id]
@@ -96,6 +98,7 @@ theorem hasDerivAt_Pd (s : ℝ) :
   have h := ((hasDerivAt_const s (-3 * π / 2)).sub (hasDerivAt_id s).arctan).add
     (((hasDerivAt_id s).div_const (3 / 40)).arctan.const_mul 6)
   convert h using 1
+  all_goals try with_reducible_and_instances rfl
   · funext s; simp only [Pd, Pi.add_apply, Pi.sub_apply, id]
   · simp only [id]; ring
 

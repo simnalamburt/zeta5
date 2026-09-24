@@ -312,7 +312,7 @@ theorem p_not_mem_J {c : ℕ} (hc : 1 ≤ c) (hcm : c ≤ (p - 1) / 2) : p ∉ J
 
 theorem rowQ_eval_zero_Hi {c i : ℕ} (hc : c ≠ 0) (hi : el p n c ≤ i) {r : ℤ}
     (hr : r.natAbs ∈ Hi p n c) : (rowQ p n c i).eval (-(r : ℚ) ^ 2) = 0 := by
-  rw [rowQ, rowZ, qc, ite_eq_left_of_eq_true _ _ (eq_true ⟨hc, hi⟩), Polynomial.map_mul,
+  rw [rowQ, rowZ, qc, if_pos ⟨hc, hi⟩, Polynomial.map_mul,
     Polynomial.map_mul, eval_mul, eval_mul,
     Ec, eval_prod_vanish _ hr]
   simp
@@ -320,7 +320,7 @@ theorem rowQ_eval_zero_Hi {c i : ℕ} (hc : c ≠ 0) (hi : el p n c ≤ i) {r : 
 theorem VGe_rowQ_class {c i : ℕ} (hq : ¬(c ≠ 0 ∧ el p n c ≤ i)) {r : ℤ}
     (hc : (p : ℤ) ∣ r ^ 2 - (c : ℤ) ^ 2) :
     VGe p (kap c * i) ((rowQ p n c i).eval (-(r : ℚ) ^ 2)) := by
-  rw [rowQ, rowZ, qc, ite_eq_right_of_eq_false _ _ (eq_false hq), Polynomial.map_mul, eval_mul]
+  rw [rowQ, rowZ, qc, if_neg hq, Polynomial.map_mul, eval_mul]
   have h1 : VGe p 0 (((Pc p n c).map (Int.castRingHom ℚ)).eval (-(r : ℚ) ^ 2)) :=
     VGe_eval (PolyVGe_intCast_poly _) (by
       have := VGe_intCast (p := p) (-r ^ 2); push_cast at this; exact this)

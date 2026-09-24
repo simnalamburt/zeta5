@@ -194,7 +194,7 @@ theorem VGe_Qval (K m : ℕ) (y : ℤ) :
 /-! ### The residues (Lemma 3.3, `k ≤ 2K`) -/
 
 /-- `R_K = {-K, …, K} \ {0}`, the poles of the pulled back `1 / D_K`. -/
-def RK (K : ℕ) : Finset ℤ := (Icc (-(K : ℤ)) K).erase 0
+noncomputable def RK (K : ℕ) : Finset ℤ := (Icc (-(K : ℤ)) K).erase 0
 
 theorem poleSet_Icc (K : ℕ) : poleSet (Icc 1 K) = RK K := by
   ext r

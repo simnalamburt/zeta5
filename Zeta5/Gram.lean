@@ -210,7 +210,7 @@ theorem posDef_G (n : ℕ) : ((G n).map (aeval (riemannZeta 5).re)).PosDef := by
   refine (setIntegral_pos_iff_support_of_nonneg_ae ?_ hPint).2 ?_
   · exact ae_restrict_of_forall_mem measurableSet_Ioi fun y hy =>
       mul_nonneg (sq_nonneg _) (gramWeight_pos n hy).le
-  have hZ := finite_setOfPred_isRoot (sum_mul_pow_ne_zero hv)
+  have hZ := finite_setOf_isRoot (sum_mul_pow_ne_zero hv)
   have hsub : Ioi 0 \ {x | IsRoot (∑ i, C (v i) * X ^ (2 * (i : ℕ)) : ℝ[X]) x} ⊆
       Function.support (fun y => P y ^ 2 * gramWeight n y) ∩ Ioi 0 := by
     intro y ⟨hy, hroot⟩
@@ -218,7 +218,7 @@ theorem posDef_G (n : ℕ) : ((G n).map (aeval (riemannZeta 5).re)).PosDef := by
     have hPy : P y ≠ 0 := by
       intro h
       apply hroot
-      simp only [Set.mem_ofPred_eq, IsRoot, eval_finsetSum, eval_mul, eval_C, eval_pow, eval_X]
+      simp only [Set.mem_setOf_eq, IsRoot, eval_finsetSum, eval_mul, eval_C, eval_pow, eval_X]
       exact h
     exact mul_ne_zero (pow_ne_zero _ hPy) (gramWeight_pos n hy).ne'
   refine lt_of_lt_of_le ?_ (measure_mono hsub)

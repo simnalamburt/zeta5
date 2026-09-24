@@ -94,6 +94,7 @@ theorem det_coeff_ne_zero {H : ℕ} (b : Fin H → F[X]) (hb : ∀ k, (b k).natD
   have h2 := h1.map' (degreeLTEquiv F H).toLinearMap (degreeLTEquiv F H).ker
   have h3 : LinearIndependent F (Matrix.of fun k l : Fin H => (b k).coeff l).row := by
     convert h2 using 1
+    all_goals try with_reducible_and_instances rfl
     ext k l
     rfl
   rw [Matrix.linearIndependent_rows_iff_isUnit, Matrix.isUnit_iff_isUnit_det] at h3

@@ -37,7 +37,7 @@ noncomputable def wt (y : ℝ) : ℝ := ∑' ℓ : ℕ, wTerm ℓ y
 theorem integrableOn_pow_mul_exp (m : ℕ) {c : ℝ} (hc : 0 < c) :
     IntegrableOn (fun y : ℝ => y ^ m * exp (-(c * y))) (Ioi 0) := by
   have := integrableOn_rpow_mul_exp_neg_mul_rpow (s := m) (p := 1) (b := c)
-    (by linarith [(m.cast_nonneg : (0 : ℝ) ≤ m)]) one_pos hc
+    (by linarith [(m.cast_nonneg : (0 : ℝ) ≤ m)]) le_rfl hc
   refine this.congr_fun (fun y hy => ?_) measurableSet_Ioi
   simp [rpow_natCast]
 
@@ -91,7 +91,8 @@ theorem hasSum_zeta_even (e : ℕ) :
   simp only [Finset.range_one, Finset.sum_singleton, Nat.cast_zero, Nat.cast_add, Nat.cast_one,
     zero_pow (by omega : 2 * e + 2 ≠ 0), div_zero, sub_zero] at h
   convert h using 3
-  ring
+  · rfl
+  · ring
 
 /-- The value `(2e + 5)! ζ(2e + 2) / (12 (2π)^{2e+2})` of the `2e`-th moment of `w`. -/
 noncomputable def momentValue (e : ℕ) : ℝ :=

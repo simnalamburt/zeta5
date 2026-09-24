@@ -3,7 +3,7 @@ Copyright (c) 2026 Jihyeon Kim. All rights reserved.
 Released under Apache 2.0 or MIT license, at your option, as described in the file COPYRIGHT.
 Authors: Jihyeon Kim
 -/
-import Mathlib.Analysis.SpecialFunctions.FrullaniIntegral
+import Zeta5.Frullani
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.MeasureTheory.Integral.Prod
 
@@ -178,14 +178,8 @@ theorem integrableOn_frullani {δ : ℝ} (hδ : 0 < δ) (r : ℝ) :
 /-- `log(r² + δ²) = log δ² + ∫₀^∞ s⁻¹ (e^{-δ² s} - e^{-(r² + δ²) s}) ds`. -/
 theorem log_eq_frullani {δ : ℝ} (hδ : 0 < δ) (r : ℝ) :
     log (r ^ 2 + δ ^ 2) = log (δ ^ 2) + ∫ s in Ioi 0, frullani δ r s := by
-  have hf : LocallyIntegrableOn (fun x : ℝ => exp (-x)) (Ioi 0) :=
-    (continuous_exp.comp continuous_neg).locallyIntegrable.locallyIntegrableOn _
-  have hL : Tendsto (fun x : ℝ => exp (-x)) (nhdsWithin 0 (Ioi 0)) (nhds 1) := by
-    have := (continuous_neg.rexp.tendsto 0).mono_left (nhdsWithin_le_nhds (s := Ioi 0))
-    rwa [neg_zero, exp_zero] at this
-  have h := Frullani.integral_Ioi_eq hf (pow_pos hδ 2) (by positivity : 0 < r ^ 2 + δ ^ 2) hL
-    tendsto_exp_neg_atTop_nhds_zero (integrableOn_frullani hδ r)
-  simp only [smul_eq_mul, sub_zero, mul_one] at h
+  have h := integral_frullani_exp (a := δ ^ 2) (b := r ^ 2 + δ ^ 2) (pow_pos hδ 2)
+    (by nlinarith [sq_nonneg r])
   rw [show (∫ s in Ioi 0, frullani δ r s) = log ((r ^ 2 + δ ^ 2) / δ ^ 2) by rw [← h]; rfl,
     log_div (by positivity) (by positivity)]
   ring
@@ -196,7 +190,7 @@ theorem log_eq_frullani {δ : ℝ} (hδ : 0 < δ) (r : ℝ) :
 noncomputable def logEnergy (δ : ℝ) (μ ν : Measure ℝ) : ℝ :=
   ∫ p, log ((p.1 - p.2) ^ 2 + δ ^ 2) ∂(μ.prod ν)
 
-omit [IsFiniteMeasure μ] in
+omit [IsFiniteMeasure μ] [IsFiniteMeasure ν] in
 theorem ae_sq_sub_le {T : ℝ} (hμ : ∀ᵐ x ∂μ, |x| ≤ T) (hν : ∀ᵐ y ∂ν, |y| ≤ T) :
     ∀ᵐ p ∂(μ.prod ν), (p.1 - p.2) ^ 2 ≤ 4 * T ^ 2 := by
   filter_upwards [Measure.quasiMeasurePreserving_fst.ae hμ,

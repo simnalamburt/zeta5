@@ -4,6 +4,7 @@ Released under Apache 2.0 or MIT license, at your option, as described in the fi
 Authors: Jihyeon Kim
 -/
 import Mathlib.NumberTheory.BernoulliPolynomials
+import Zeta5.Compat
 import Zeta5.PoleDen
 
 /-!
